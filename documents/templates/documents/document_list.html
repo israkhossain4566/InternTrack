@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Documents</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">My Documents</h1>
+        <a class="btn btn-primary" href="{% url 'documents:document_upload' %}">Upload Document</a>
+    </div>
+
+    {% if documents %}
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Version</th>
+                    <th>Uploaded</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for document in documents %}
+                    <tr>
+                        <td>{{ document.title }}</td>
+                        <td>{{ document.get_document_type_display }}</td>
+                        <td>{{ document.version }}</td>
+                        <td>{{ document.uploaded_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'documents:document_detail' document.pk %}">View</a>
+                            <a class="btn btn-sm btn-outline-danger" href="{% url 'documents:document_delete' document.pk %}">Delete</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">You have not uploaded any documents yet.</div>
+    {% endif %}
+</main>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Home | InternTrack{% endblock %}
+
+{% block content %}
+<div class="p-4 bg-light rounded">
+    <h1 class="h3">Welcome to InternTrack</h1>
+    <p class="mb-3">Manage your internship documents and keep track of your application materials.</p>
+    <a class="btn btn-primary" href="{% url 'documents:document_list' %}">Go to Documents</a>
+</div>
+{% endblock %}
