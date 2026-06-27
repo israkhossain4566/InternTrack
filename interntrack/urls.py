@@ -30,6 +30,7 @@ urlpatterns = [
     path('accounts/logout/', LogoutView.as_view(), name='logout'),
     path('documents/', DocumentListView.as_view(), name='document_list'),
     path('', include('documents.urls')),
+    path('applications/', include('applications.urls'))
 ]
 
 if settings.DEBUG:
