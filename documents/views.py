@@ -1,6 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView
+from django.contrib.messages.views import SuccessMessageMixin
+from django.urls import reverse, reverse_lazy
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from .forms import UploadedDocumentForm
 from .models import UploadedDocument
@@ -33,6 +34,32 @@ class DocumentDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         return UploadedDocument.objects.filter(user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        document = self.object
+
+        if document.document_type == UploadedDocument.RESUME:
+            context["resume_versions"] = UploadedDocument.objects.filter(
+                user=self.request.user,
+                document_type=UploadedDocument.RESUME,
+            ).order_by("-uploaded_at")
+
+        return context
+
+
+class DocumentUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = UploadedDocument
+    form_class = UploadedDocumentForm
+    template_name = "documents/document_form.html"
+    context_object_name = "document"
+    success_message = "Document updated successfully."
+
+    def get_queryset(self):
+        return UploadedDocument.objects.filter(user=self.request.user)
+
+    def get_success_url(self):
+        return reverse("documents:document_detail", kwargs={"pk": self.object.pk})
 
 
 class DocumentDeleteView(LoginRequiredMixin, DeleteView):

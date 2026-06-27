@@ -4,6 +4,7 @@ from .views import (
     DocumentDeleteView,
     DocumentDetailView,
     DocumentListView,
+    DocumentUpdateView,
     DocumentUploadView,
 )
 
@@ -13,6 +14,7 @@ urlpatterns = [
     path("documents/", DocumentListView.as_view(), name="document_list"),
     path("documents/upload/", DocumentUploadView.as_view(), name="document_upload"),
     path("documents/<int:pk>/", DocumentDetailView.as_view(), name="document_detail"),
+    path("documents/<int:pk>/edit/", DocumentUpdateView.as_view(), name="document_edit"),
     path(
         "documents/<int:pk>/delete/",
         DocumentDeleteView.as_view(),
