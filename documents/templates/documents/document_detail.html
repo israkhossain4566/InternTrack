@@ -10,12 +10,24 @@
 <main class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0">{{ document.title }}</h1>
-        <a class="btn btn-secondary" href="{% url 'documents:document_list' %}">Back to Documents</a>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" href="{% url 'documents:document_list' %}">Back to My Documents</a>
+            <a class="btn btn-primary" href="{% url 'documents:document_upload' %}">Upload New Document</a>
+        </div>
     </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'success' }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
 
     <div class="card">
         <div class="card-body">
             <dl class="row mb-0">
+                <dt class="col-sm-3">Title</dt>
+                <dd class="col-sm-9">{{ document.title }}</dd>
+
                 <dt class="col-sm-3">Document Type</dt>
                 <dd class="col-sm-9">{{ document.get_document_type_display }}</dd>
 
@@ -30,15 +42,47 @@
 
                 <dt class="col-sm-3">File</dt>
                 <dd class="col-sm-9">
-                    <a href="{{ document.file.url }}" target="_blank" rel="noopener">Open File</a>
+                    <a href="{{ document.file.url }}" target="_blank" rel="noopener">{{ document.file.name }}</a>
                 </dd>
             </dl>
         </div>
     </div>
 
-    <div class="mt-3">
+    <div class="d-flex gap-2 mt-3">
+        <a class="btn btn-primary" href="{% url 'documents:document_edit' document.pk %}">Edit Document</a>
+        <a class="btn btn-outline-primary" href="{{ document.file.url }}" target="_blank" rel="noopener">Download/Open File</a>
         <a class="btn btn-danger" href="{% url 'documents:document_delete' document.pk %}">Delete Document</a>
     </div>
+
+    {% if resume_versions %}
+        <section class="mt-5">
+            <h2 class="h4 mb-3">Resume Version History</h2>
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Version</th>
+                        <th>Uploaded</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for resume in resume_versions %}
+                        <tr>
+                            <td>{{ resume.title }}</td>
+                            <td>{{ resume.version }}</td>
+                            <td>{{ resume.uploaded_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'documents:document_detail' resume.pk %}">View</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    {% endif %}
 </main>
 </body>
 </html>
