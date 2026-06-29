@@ -1,13 +1,8 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ document.title }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<main class="container py-4">
+{% extends "base.html" %}
+
+{% block title %}{{ document.title }}{% endblock %}
+
+{% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0">{{ document.title }}</h1>
         <div class="d-flex gap-2">
@@ -49,7 +44,7 @@
     </div>
 
     <div class="d-flex gap-2 mt-3">
-        <a class="btn btn-primary" href="{% url 'documents:document_edit' document.pk %}">Edit Document</a>
+        <a class="btn btn-warning" href="{% url 'documents:document_edit' document.pk %}">Edit Document</a>
         <a class="btn btn-outline-primary" href="{{ document.file.url }}" target="_blank" rel="noopener">Download/Open File</a>
         <a class="btn btn-danger" href="{% url 'documents:document_delete' document.pk %}">Delete Document</a>
     </div>
@@ -58,8 +53,8 @@
         <section class="mt-5">
             <h2 class="h4 mb-3">Resume Version History</h2>
             <div class="table-responsive">
-                <table class="table table-striped align-middle">
-                    <thead>
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-dark">
                     <tr>
                         <th>Title</th>
                         <th>Version</th>
@@ -74,7 +69,7 @@
                             <td>{{ resume.version }}</td>
                             <td>{{ resume.uploaded_at|date:"M d, Y H:i" }}</td>
                             <td>
-                                <a class="btn btn-sm btn-outline-primary" href="{% url 'documents:document_detail' resume.pk %}">View</a>
+                                <a class="btn btn-sm btn-info" href="{% url 'documents:document_detail' resume.pk %}">View</a>
                             </td>
                         </tr>
                     {% endfor %}
@@ -83,6 +78,4 @@
             </div>
         </section>
     {% endif %}
-</main>
-</body>
-</html>
+{% endblock %}
