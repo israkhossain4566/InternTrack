@@ -20,7 +20,7 @@ class JobApplication(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    company_name = models.CharField(max_length=200)  # simple text now
     job_title = models.CharField(max_length=200)
     job_location = models.CharField(max_length=200, blank=True)
     internship_type = models.CharField(max_length=100, blank=True)
@@ -31,5 +31,7 @@ class JobApplication(models.Model):
     notes = models.TextField(blank=True)
     interview_date = models.DateField(null=True, blank=True)
 
+    def __str__(self):
+        return f"{self.job_title} at {self.company_name}"
     def __str__(self):
         return f"{self.job_title} at {self.company.name}"
