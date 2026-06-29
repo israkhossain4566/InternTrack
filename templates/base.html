@@ -21,6 +21,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'documents:document_list' %}">Documents</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'application_list' %}">Applications</a>
+                </li>
             </ul>
             <div class="d-flex align-items-center gap-2">
                 {% if user.is_authenticated %}
