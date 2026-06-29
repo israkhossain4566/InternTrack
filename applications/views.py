@@ -62,18 +62,18 @@ def trigger_notifications(user, app, old_status, old_deadline, old_interview):
     if app.status != old_status:
         Notification.objects.create(
             user=user,
-            message=f'Application for {app.job_title} at {app.company.name} changed to {app.status}.',
+            message=f'Application for {app.job_title} at {app.company_name} changed to {app.status}.',
             type='status'
         )
     if app.interview_date and app.interview_date != old_interview:
         Notification.objects.create(
             user=user,
-            message=f'Interview date updated for {app.job_title} at {app.company.name}: {app.interview_date}.',
+            message=f'Interview date updated for {app.job_title} at {app.company_name}: {app.interview_date}.',
             type='interview'
         )
     if app.deadline and app.deadline != old_deadline:
         Notification.objects.create(
             user=user,
-            message=f'Deadline updated for {app.job_title} at {app.company.name}: {app.deadline}.',
+            message=f'Deadline updated for {app.job_title} at {app.company_name}: {app.deadline}.',
             type='deadline'
         )

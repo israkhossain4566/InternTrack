@@ -1,10 +1,55 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>My Applications</h2>
+        <a href="{% url 'application_add' %}" class="btn btn-primary">+ Add Application</a>
+    </div>
+
+    {% if applications %}
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Company</th>
+                <th>Job Title</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Deadline</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td>{{ app.company_name }}</td>
+                <td>{{ app.job_title }}</td>
+                <td>{{ app.job_location }}</td>
+                <td>
+                    {% if app.status == 'Offer' %}
+                        <span class="badge bg-success">{{ app.status }}</span>
+                    {% elif app.status == 'Rejected' %}
+                        <span class="badge bg-danger">{{ app.status }}</span>
+                    {% elif app.status == 'Interview' %}
+                        <span class="badge bg-warning text-dark">{{ app.status }}</span>
+                    {% elif app.status == 'Applied' %}
+                        <span class="badge bg-primary">{{ app.status }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ app.status }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ app.deadline|default:"—" }}</td>
+                <td>
+                    <a href="{% url 'application_detail' app.pk %}" class="btn btn-sm btn-info">View</a>
+                    <a href="{% url 'application_edit' app.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% url 'application_delete' app.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info">No applications yet. <a href="{% url 'application_add' %}">Add one!</a></div>
+    {% endif %}
+</div>
+{% endblock %}

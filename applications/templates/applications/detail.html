@@ -1,10 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ app.job_title }} — {{ app.company_name }}</h2>
+    <table class="table table-bordered mt-3">
+        <tr><th>Company</th><td>{{ app.company_name }}</td></tr>
+        <tr><th>Job Title</th><td>{{ app.job_title }}</td></tr>
+        <tr><th>Location</th><td>{{ app.job_location|default:"—" }}</td></tr>
+        <tr><th>Internship Type</th><td>{{ app.internship_type|default:"—" }}</td></tr>
+        <tr><th>Status</th><td>{{ app.status }}</td></tr>
+        <tr><th>Application Date</th><td>{{ app.application_date }}</td></tr>
+        <tr><th>Deadline</th><td>{{ app.deadline|default:"—" }}</td></tr>
+        <tr><th>Interview Date</th><td>{{ app.interview_date|default:"—" }}</td></tr>
+        <tr><th>Salary</th><td>{{ app.salary|default:"—" }}</td></tr>
+        <tr><th>Notes</th><td>{{ app.notes|default:"—" }}</td></tr>
+    </table>
+    <a href="{% url 'application_edit' app.pk %}" class="btn btn-warning">Edit</a>
+    <a href="{% url 'application_delete' app.pk %}" class="btn btn-danger">Delete</a>
+    <a href="{% url 'application_list' %}" class="btn btn-secondary">Back</a>
+</div>
+{% endblock %}
