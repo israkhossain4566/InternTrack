@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile | InternTrack{% endblock %}
+
+{% block content %}
+<div class="row py-4">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 text-center p-4">
+            {% if profile.profile_picture %}
+                <img src="{{ profile.profile_picture.url }}" class="rounded-circle mx-auto d-block mb-3" alt="Profile Picture" style="width: 150px; height: 150px; object-fit: cover;">
+            {% else %}
+                <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center bg-secondary text-white mb-3" style="width: 150px; height: 150px; font-size: 3rem;">
+                    {{ user.username|make_list|first|upper }}
+                </div>
+            {% endif %}
+            <h3 class="mb-0">{{ profile.full_name|default:user.username }}</h3>
+            <p class="text-muted">{{ user.email }}</p>
+            <a href="{% url 'profile_edit' %}" class="btn btn-primary mt-2">Edit Profile</a>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white pb-0 border-0 pt-4">
+                <h4 class="card-title text-primary">Profile Details</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <th scope="row" class="text-muted w-25">Full Name</th>
+                            <td class="fw-bold">{{ profile.full_name|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="text-muted">Username</th>
+                            <td class="fw-bold">{{ user.username }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="text-muted">Email</th>
+                            <td class="fw-bold">{{ user.email }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="text-muted">University</th>
+                            <td class="fw-bold">{{ profile.university|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="text-muted">Program</th>
+                            <td class="fw-bold">{{ profile.program|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="text-muted">Phone Number</th>
+                            <td class="fw-bold">{{ profile.phone_number|default:"Not specified" }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -15,25 +15,47 @@
         </button>
         <div class="collapse navbar-collapse" id="mainNavbar">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                {% if user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'home' %}">Home</a>
+                    <a class="nav-link" href="{% url 'home' %}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'application_list' %}">Applications</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'documents:document_list' %}">Documents</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'application_list' %}">Applications</a>
+                    <a class="nav-link" href="#">ATS Checker</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Notifications</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'home' %}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#tips">Internship Tips</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#about">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#contact">Contact</a>
+                </li>
+                {% endif %}
             </ul>
             <div class="d-flex align-items-center gap-2">
                 {% if user.is_authenticated %}
-                    <span class="navbar-text">Hello, {{ user.username }}</span>
+                    <a class="navbar-text text-decoration-none me-2" href="{% url 'profile' %}">Hello, {{ user.username }}</a>
                     <form method="post" action="{% url 'logout' %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
                     </form>
                 {% else %}
                     <a class="btn btn-outline-light btn-sm" href="{% url 'login' %}">Login</a>
+                    <a class="btn btn-primary btn-sm" href="{% url 'register' %}">Register</a>
                 {% endif %}
             </div>
         </div>
