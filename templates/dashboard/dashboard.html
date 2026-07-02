@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard – InternTrack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">My Dashboard</h1>
+    {% if user.is_staff %}
+    <a href="{% url 'dashboard:admin_stats' %}" class="btn btn-dark btn-sm">
+        Admin Stats
+    </a>
+    {% endif %}
+</div>
+
+<!-- ── Stat Cards ─────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="fs-1 fw-bold text-primary">{{ total }}</div>
+                <div class="text-muted small">Total</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="fs-1 fw-bold text-secondary">{{ saved }}</div>
+                <div class="text-muted small">Saved</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="fs-1 fw-bold text-info">{{ applied }}</div>
+                <div class="text-muted small">Applied</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="fs-1 fw-bold text-warning">{{ interview }}</div>
+                <div class="text-muted small">Interview</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="fs-1 fw-bold text-success">{{ offer }}</div>
+                <div class="text-muted small">Offer</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="fs-1 fw-bold text-danger">{{ rejected }}</div>
+                <div class="text-muted small">Rejected</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Charts ─────────────────────────────────────────────── -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-dark text-white">Status Distribution</div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="statusChart" style="max-height:260px;"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-dark text-white">Monthly Applications</div>
+            <div class="card-body">
+                <canvas id="monthlyChart" style="max-height:260px;"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-dark text-white">Offer Ratio</div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="offerChart" style="max-height:260px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Session & Cookie Info ──────────────────────────────── -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-dark text-white">Session Info</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Last Login</dt>
+                    <dd class="col-sm-7">
+                        {% if last_login %}
+                            {{ last_login }}
+                        {% else %}
+                            <span class="text-muted">First visit this session</span>
+                        {% endif %}
+                    </dd>
+                    <dt class="col-sm-5">Recently Viewed</dt>
+                    <dd class="col-sm-7">
+                        {% if recently_viewed %}
+                            <ul class="list-unstyled mb-0">
+                                {% for app in recently_viewed %}
+                                <li>
+                                    <a href="{% url 'application_detail' app.pk %}" class="text-decoration-none">
+                                        {{ app.job_title }} @ {{ app.company_name }}
+                                    </a>
+                                    <span class="badge bg-secondary ms-1">{{ app.status }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <span class="text-muted">No recently viewed applications.</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-dark text-white">Visit Tracking</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-6">Today's Visits</dt>
+                    <dd class="col-sm-6">
+                        <span class="badge bg-primary fs-6">{{ daily_visits }}</span>
+                    </dd>
+                    <dt class="col-sm-6">Most Searched Company</dt>
+                    <dd class="col-sm-6">
+                        {% if most_searched_company != 'N/A' %}
+                            <span class="fw-semibold">{{ most_searched_company }}</span>
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Quick Links ────────────────────────────────────────── -->
+<div class="d-flex gap-2">
+    <a href="{% url 'application_list' %}" class="btn btn-primary">View All Applications</a>
+    <a href="{% url 'dashboard:notification_list' %}" class="btn btn-outline-secondary">All Notifications</a>
+</div>
+
+<!-- ── Chart.js ───────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const statusLabels = {{ status_labels|safe }};
+const statusData   = {{ status_data|safe }};
+const monthLabels  = {{ month_labels|safe }};
+const monthlyData  = {{ monthly_data|safe }};
+const offerLabels  = {{ offer_labels|safe }};
+const offerData    = {{ offer_data|safe }};
+
+// Status pie
+new Chart(document.getElementById('statusChart'), {
+    type: 'pie',
+    data: {
+        labels: statusLabels,
+        datasets: [{
+            data: statusData,
+            backgroundColor: ['#6c757d','#0dcaf0','#ffc107','#198754','#dc3545'],
+        }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } } }
+});
+
+// Monthly bar
+new Chart(document.getElementById('monthlyChart'), {
+    type: 'bar',
+    data: {
+        labels: monthLabels,
+        datasets: [{
+            label: 'Applications',
+            data: monthlyData,
+            backgroundColor: 'rgba(13,110,253,0.7)',
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+});
+
+// Offer doughnut
+new Chart(document.getElementById('offerChart'), {
+    type: 'doughnut',
+    data: {
+        labels: offerLabels,
+        datasets: [{
+            data: offerData,
+            backgroundColor: ['#198754','#dee2e6'],
+        }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } } }
+});
+</script>
+{% endblock %}

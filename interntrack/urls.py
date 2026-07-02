@@ -31,7 +31,8 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('documents/', DocumentListView.as_view(), name='document_list'),
     path('', include('documents.urls')),
-    path('applications/', include('applications.urls'))
+    path('applications/', include('applications.urls')),
+    path('dashboard/', include('dashboard.urls', namespace='dashboard')),
 ]
 
 if settings.DEBUG:
