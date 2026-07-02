@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Register | InternTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow border-0 rounded-3">
+            <div class="card-body p-5">
+                <h2 class="text-center text-primary mb-4 fw-bold">Join InternTrack</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field.errors }}
+                            <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.html_name }}" id="{{ field.id_for_label }}" class="form-control form-control-lg {% if field.errors %}is-invalid{% endif %}" {% if field.field.required %}required{% endif %}>
+                            {% if field.help_text %}
+                                <div class="form-text text-muted small">{{ field.help_text|safe }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Sign Up</button>
+                    </div>
+                    <div class="text-center mt-3">
+                        <small>Already have an account? <a href="{% url 'login' %}" class="text-decoration-none fw-bold">Log In</a></small>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

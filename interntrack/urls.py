@@ -26,11 +26,13 @@ from .views import HomeView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', HomeView.as_view(), name='home'),
-    path('accounts/login/', LoginView.as_view(), name='login'),
-    path('accounts/logout/', LogoutView.as_view(), name='logout'),
+    path('accounts/login/', LoginView.as_view(template_name='accounts/login.html'), name='login'),
+    path('accounts/logout/', LogoutView.as_view(next_page='home'), name='logout'),
+    path('accounts/', include('accounts.urls')),
     path('documents/', DocumentListView.as_view(), name='document_list'),
     path('', include('documents.urls')),
-    path('applications/', include('applications.urls'))
+    path('applications/', include('applications.urls')),
+    path('dashboard/', include('dashboard.urls', namespace='dashboard')),
 ]
 
 if settings.DEBUG:
