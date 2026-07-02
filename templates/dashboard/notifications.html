@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications – InternTrack{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        Notifications
+        {% if unread_count %}
+            <span class="badge bg-danger ms-2">{{ unread_count }} unread</span>
+        {% endif %}
+    </h1>
+    <div class="d-flex gap-2">
+        {% if unread_count %}
+        <form method="post" action="{% url 'dashboard:notification_mark_all_read' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-primary btn-sm">
+                ✔ Mark All as Read
+            </button>
+        </form>
+        {% endif %}
+        <a href="{% url 'dashboard:dashboard_home' %}" class="btn btn-outline-secondary btn-sm">
+            ← Back to Dashboard
+        </a>
+    </div>
+</div>
+
+{% if notifications %}
+<div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th style="width:40px;"></th>
+                <th>Message</th>
+                <th>Type</th>
+                <th>Received</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for notif in notifications %}
+            <tr class="{% if not notif.is_read %}table-light fw-semibold{% endif %}">
+                <td class="text-center">
+                    {% if not notif.is_read %}
+                        <span class="badge bg-danger">●</span>
+                    {% else %}
+                        <span class="text-muted">○</span>
+                    {% endif %}
+                </td>
+                <td>{{ notif.message }}</td>
+                <td>
+                    {% if notif.type == 'status' %}
+                        <span class="badge bg-info text-dark">Status</span>
+                    {% elif notif.type == 'interview' %}
+                        <span class="badge bg-warning text-dark">Interview</span>
+                    {% elif notif.type == 'deadline' %}
+                        <span class="badge bg-secondary">Deadline</span>
+                    {% else %}
+                        <span class="badge bg-light text-dark border">General</span>
+                    {% endif %}
+                </td>
+                <td class="text-nowrap">{{ notif.created_at|date:"M d, Y H:i" }}</td>
+                <td class="text-nowrap">
+                    {% if not notif.is_read %}
+                    <a href="{% url 'dashboard:notification_mark_read' notif.pk %}"
+                       class="btn btn-sm btn-outline-success me-1">
+                        ✔ Read
+                    </a>
+                    {% endif %}
+                    <form method="post"
+                          action="{% url 'dashboard:notification_delete' notif.pk %}"
+                          style="display:inline;"
+                          onsubmit="return confirm('Delete this notification?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            🗑 Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">You have no notifications.</div>
+{% endif %}
+{% endblock %}

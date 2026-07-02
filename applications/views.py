@@ -49,6 +49,12 @@ def application_delete(request, pk):
 @login_required
 def application_detail(request, pk):
     app = get_object_or_404(JobApplication, pk=pk, user=request.user)
+    # Track recently viewed in session (dashboard feature)
+    try:
+        from dashboard.views import track_recently_viewed
+        track_recently_viewed(request, pk)
+    except ImportError:
+        pass
     return render(request, 'applications/detail.html', {'app': app})
 
 def trigger_notifications(user, app, old_status, old_deadline, old_interview):
