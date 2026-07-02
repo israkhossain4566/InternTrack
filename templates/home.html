@@ -3,9 +3,109 @@
 {% block title %}Home | InternTrack{% endblock %}
 
 {% block content %}
-<div class="p-4 bg-light rounded">
-    <h1 class="h3">Welcome to InternTrack</h1>
-    <p class="mb-3">Manage your internship documents and keep track of your application materials.</p>
-    <a class="btn btn-primary" href="{% url 'documents:document_list' %}">Go to Documents</a>
-</div>
+{% if user.is_authenticated %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-6 fw-bold text-primary">Welcome to your Dashboard, {{ user.first_name|default:user.username }}!</h1>
+            <p class="lead text-muted">Manage your internship applications and documents efficiently.</p>
+            <hr>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100 bg-primary text-white">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <h4 class="card-title">My Applications</h4>
+                        <p class="card-text">Track the status of your internship applications, update stages, and log your progress.</p>
+                    </div>
+                    <a href="{% url 'application_list' %}" class="btn btn-light mt-3">View Applications</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100 bg-success text-white">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <h4 class="card-title">My Documents</h4>
+                        <p class="card-text">Store, manage, and tailor your resumes and cover letters for different applications.</p>
+                    </div>
+                    <a href="{% url 'documents:document_list' %}" class="btn btn-light mt-3">Manage Documents</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <!-- Landing Page -->
+    <div class="row align-items-center mb-5 py-5 text-center text-md-start">
+        <div class="col-md-6">
+            <h1 class="display-4 fw-bold text-primary mb-3">Track Your Path to Success</h1>
+            <p class="lead text-secondary mb-4">InternTrack helps you organize applications, tailor resumes, and land your dream internship seamlessly.</p>
+            <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-4 me-md-2">Get Started</a>
+            <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-lg px-4">Login</a>
+        </div>
+        <div class="col-md-6 mt-4 mt-md-0 d-none d-md-block">
+            <div class="p-5 bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 300px; height: 300px;">
+                <h3 class="text-primary text-center">InternTrack<br>Journey</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Internship Tips -->
+    <div id="tips" class="py-5 bg-light rounded px-4 mb-5 shadow-sm">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-dark">Internship Tips</h2>
+            <p class="text-muted">Expert advice to help you stand out</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">Tailor Your Resume</h5>
+                        <p class="card-text">Always modify your resume to match the job description. Use our ATS checker to compare keywords.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">Network Continuously</h5>
+                        <p class="card-text">Connect with industry professionals on LinkedIn and attend career fairs.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">Prepare for Interviews</h5>
+                        <p class="card-text">Practice behavioral questions using the STAR method (Situation, Task, Action, Result).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <div id="about" class="py-5 mb-5">
+        <div class="row align-items-center">
+            <div class="col-md-6 order-2 order-md-1">
+                <h2 class="fw-bold text-dark mb-3">About InternTrack</h2>
+                <p class="text-muted">Built by a team of passionate developers, InternTrack is designed specifically for students to navigate the complex world of internship hunting. We provide a centralized platform to store documents, track application statuses, and optimize your resume against actual job descriptions.</p>
+            </div>
+            <div class="col-md-6 order-1 order-md-2 mb-4 mb-md-0 d-flex justify-content-center">
+                 <div class="bg-primary text-white p-4 rounded shadow">
+                     <h4>Our Mission</h4>
+                     <p class="mb-0">Empowering students to land their dream internships with confidence and organization.</p>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Section -->
+    <div id="contact" class="py-5 bg-light rounded px-4 text-center shadow-sm">
+        <h2 class="fw-bold text-dark mb-3">Contact Us</h2>
+        <p class="text-muted mb-4">Have questions or feedback? We'd love to hear from you!</p>
+        <a href="mailto:support@interntrack.com" class="btn btn-outline-primary btn-lg">Email Support</a>
+    </div>
+{% endif %}
 {% endblock %}
