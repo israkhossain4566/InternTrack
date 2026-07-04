@@ -4,7 +4,15 @@
 
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">{{ document.title }}</h1>
+        <h1 class="h3 mb-0">
+            {{ document.title }}
+            {% if document.document_type == "resume" %}
+                <span class="badge bg-secondary">V{{ document.version }}</span>
+                {% if latest_resume and document.pk == latest_resume.pk %}
+                    <span class="badge bg-success">Latest Resume</span>
+                {% endif %}
+            {% endif %}
+        </h1>
         <div class="d-flex gap-2">
             <a class="btn btn-outline-secondary" href="{% url 'documents:document_list' %}">Back to My Documents</a>
             <a class="btn btn-primary" href="{% url 'documents:document_upload' %}">Upload New Document</a>
@@ -27,7 +35,12 @@
                 <dd class="col-sm-9">{{ document.get_document_type_display }}</dd>
 
                 <dt class="col-sm-3">Version</dt>
-                <dd class="col-sm-9">{{ document.version }}</dd>
+                <dd class="col-sm-9">
+                    V{{ document.version }}
+                    {% if document.document_type == "resume" and latest_resume and document.pk == latest_resume.pk %}
+                        <span class="badge bg-success ms-2">Latest Resume</span>
+                    {% endif %}
+                </dd>
 
                 <dt class="col-sm-3">Uploaded At</dt>
                 <dd class="col-sm-9">{{ document.uploaded_at|date:"M d, Y H:i" }}</dd>
@@ -58,6 +71,7 @@
                     <tr>
                         <th>Title</th>
                         <th>Version</th>
+                        <th>Status</th>
                         <th>Uploaded</th>
                         <th>Action</th>
                     </tr>
@@ -66,7 +80,14 @@
                     {% for resume in resume_versions %}
                         <tr>
                             <td>{{ resume.title }}</td>
-                            <td>{{ resume.version }}</td>
+                            <td>V{{ resume.version }}</td>
+                            <td>
+                                {% if latest_resume and resume.pk == latest_resume.pk %}
+                                    <span class="badge bg-success">Latest Resume</span>
+                                {% else %}
+                                    <span class="text-muted">Older Version</span>
+                                {% endif %}
+                            </td>
                             <td>{{ resume.uploaded_at|date:"M d, Y H:i" }}</td>
                             <td>
                                 <a class="btn btn-sm btn-info" href="{% url 'documents:document_detail' resume.pk %}">View</a>
