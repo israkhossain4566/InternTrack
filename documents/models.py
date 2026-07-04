@@ -23,13 +23,11 @@ def validate_document_size(file):
 class UploadedDocument(models.Model):
     RESUME = "resume"
     COVER_LETTER = "cover_letter"
-    JOB_DESCRIPTION = "job_description"
     OTHER = "other"
 
     DOCUMENT_TYPE_CHOICES = [
         (RESUME, "Resume"),
         (COVER_LETTER, "Cover Letter"),
-        (JOB_DESCRIPTION, "Job Description"),
         (OTHER, "Other"),
     ]
 

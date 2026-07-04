@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}ATS Resume Analysis{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="h3">ATS Resume Analysis</h1>
+    <p class="text-muted mb-0">Review your resume match score and skill coverage.</p>
+</div>
+
+{% if result %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+                <div>
+                    <h2 class="h5 mb-1">ATS Match Score</h2>
+                    <p class="text-muted mb-0">Calculated with TF-IDF and cosine similarity.</p>
+                </div>
+                <div class="text-lg-end">
+                    <div class="display-4 fw-bold">{{ result.match_score }}%</div>
+                    <div class="text-warning fs-4">
+                        {% if rating_stars == "5" %}
+                            &#9733;&#9733;&#9733;&#9733;&#9733;
+                        {% elif rating_stars == "4" %}
+                            &#9733;&#9733;&#9733;&#9733;&#9734;
+                        {% elif rating_stars == "3" %}
+                            &#9733;&#9733;&#9733;&#9734;&#9734;
+                        {% else %}
+                            &#9733;&#9733;&#9734;&#9734;&#9734;
+                        {% endif %}
+                    </div>
+                    <div class="fw-semibold">{{ rating_label }}</div>
+                </div>
+            </div>
+
+            <div class="progress" role="progressbar" aria-label="ATS match score" aria-valuenow="{{ result.match_score }}" aria-valuemin="0" aria-valuemax="100" style="height: 34px;">
+                <div class="progress-bar {{ progress_class }} fw-semibold" style="width: {{ result.match_score }}%;">
+                    {{ result.match_score }}%
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white fw-semibold">Matched Skills</div>
+                <div class="card-body">
+                    {% if result.matched_keywords %}
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for keyword in result.matched_keywords %}
+                                <span class="badge text-bg-success">{{ keyword }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No matched tracked skills found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-danger text-white fw-semibold">Missing Skills</div>
+                <div class="card-body">
+                    {% if result.missing_keywords %}
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for keyword in result.missing_keywords %}
+                                <span class="badge text-bg-danger">{{ keyword }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No missing tracked skills found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fw-semibold">Recommendations</div>
+        <div class="card-body">
+            {% if result.suggestions %}
+                <ul class="mb-0">
+                    {% for suggestion in result.suggestions %}
+                        <li>{{ suggestion }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted mb-0">No missing tracked skills were found, so there are no keyword-specific recommendations.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fw-semibold">Resume Information</div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Resume Title</dt>
+                <dd class="col-sm-9">{{ result.resume_title }}</dd>
+
+                <dt class="col-sm-3">Resume Version</dt>
+                <dd class="col-sm-9">V{{ result.resume_version }}</dd>
+
+                <dt class="col-sm-3">Analysis Date</dt>
+                <dd class="col-sm-9">{{ result.analysis_date }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fw-semibold">Summary</div>
+        <div class="card-body">
+            <p class="mb-0">{{ analysis_summary }}</p>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary" href="{% url 'documents:ats_checker' %}">Analyze Another Resume</a>
+        <a class="btn btn-outline-secondary" href="{% url 'documents:document_list' %}">Back to Documents</a>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        No ATS result found. Please run a resume check first.
+    </div>
+    <a class="btn btn-primary" href="{% url 'documents:ats_checker' %}">Analyze Another Resume</a>
+{% endif %}
+{% endblock %}

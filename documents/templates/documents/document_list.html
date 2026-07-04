@@ -10,12 +10,11 @@
     </div>
 
     {% if documents %}
-    <table class="table table-bordered table-hover">
+    <table class="table table-bordered table-hover align-middle">
         <thead class="table-dark">
             <tr>
                 <th>Title</th>
                 <th>Type</th>
-                <th>Version</th>
                 <th>Uploaded</th>
                 <th>Actions</th>
             </tr>
@@ -23,13 +22,21 @@
         <tbody>
             {% for document in documents %}
             <tr>
-                <td>{{ document.title }}</td>
+                <td>
+                    {{ document.title }}
+                    {% if document.document_type == "resume" %}
+                        <span class="badge bg-secondary">V{{ document.version }}</span>
+                        {% if latest_resume and document.pk == latest_resume.pk %}
+                            <span class="badge bg-success">Latest</span>
+                        {% endif %}
+                    {% endif %}
+                </td>
                 <td>{{ document.get_document_type_display }}</td>
-                <td>{{ document.version }}</td>
-                <td>{{ document.uploaded_at|date:"M d, Y H:i" }}</td>
+                <td>{{ document.uploaded_at|date:"M j, Y, g:i A" }}</td>
                 <td>
                     <a class="btn btn-sm btn-info" href="{% url 'documents:document_detail' document.pk %}">View</a>
                     <a class="btn btn-sm btn-warning" href="{% url 'documents:document_edit' document.pk %}">Edit</a>
+                    <a class="btn btn-sm btn-success" href="{{ document.file.url }}" target="_blank" rel="noopener">Download</a>
                     <a class="btn btn-sm btn-danger" href="{% url 'documents:document_delete' document.pk %}">Delete</a>
                 </td>
             </tr>
@@ -37,7 +44,11 @@
         </tbody>
     </table>
     {% else %}
-    <div class="alert alert-info">You have not uploaded any documents yet.</div>
+    <div class="text-center border rounded bg-light p-5">
+        <i class="bi bi-file-earmark-text display-4 text-secondary"></i>
+        <h3 class="h5 mt-3">No documents uploaded yet.</h3>
+        <a class="btn btn-primary mt-2" href="{% url 'documents:document_upload' %}">Upload Your First Document</a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

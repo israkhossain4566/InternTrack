@@ -1,0 +1,5 @@
+Django==5.2.14
+scikit-learn
+nltk
+PyPDF2
+python-docx

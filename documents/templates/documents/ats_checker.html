@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}ATS Resume Checker{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="h3">ATS Resume Checker</h1>
+    <p class="text-muted mb-0">Compare one uploaded resume with a job description.</p>
+</div>
+
+<form method="post" class="card p-4">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="mb-3">
+        <label class="form-label" for="{{ form.resume.id_for_label }}">{{ form.resume.label }}</label>
+        {{ form.resume }}
+        {% if form.resume.errors %}
+            <div class="text-danger small mt-1">{{ form.resume.errors }}</div>
+        {% endif %}
+        {% if not form.fields.resume.queryset %}
+            <div class="form-text">Upload a resume document first to use the ATS checker.</div>
+        {% endif %}
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="{{ form.job_description_text.id_for_label }}">{{ form.job_description_text.label }}</label>
+        {{ form.job_description_text }}
+        {% if form.job_description_text.errors %}
+            <div class="text-danger small mt-1">{{ form.job_description_text.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Check Match Score</button>
+        <a class="btn btn-secondary" href="{% url 'documents:document_list' %}">Cancel</a>
+    </div>
+</form>
+{% endblock %}
