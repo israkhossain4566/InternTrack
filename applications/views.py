@@ -1,12 +1,25 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from .models import Company, JobApplication
 from .forms import JobApplicationForm, CompanyForm
 
 @login_required
 def application_list(request):
     applications = JobApplication.objects.filter(user=request.user)
-    return render(request, 'applications/list.html', {'applications': applications})
+    search_query = request.GET.get('q', '').strip()
+
+    if search_query:
+        applications = applications.filter(
+            Q(company_name__icontains=search_query) |
+            Q(job_title__icontains=search_query) |
+            Q(job_location__icontains=search_query)
+        )
+
+    return render(request, 'applications/list.html', {
+        'applications': applications,
+        'search_query': search_query,
+    })
 
 @login_required
 def application_add(request):

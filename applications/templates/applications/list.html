@@ -7,6 +7,24 @@
         <a href="{% url 'application_add' %}" class="btn btn-primary">+ Add Application</a>
     </div>
 
+    <form method="get" class="card card-body mb-3">
+        <label for="application-search" class="form-label">Search applications</label>
+        <div class="input-group">
+            <input
+                type="search"
+                id="application-search"
+                name="q"
+                class="form-control"
+                placeholder="Search by company, job title, or location"
+                value="{{ search_query }}"
+            >
+            <button type="submit" class="btn btn-outline-primary">Search</button>
+            {% if search_query %}
+                <a href="{% url 'application_list' %}" class="btn btn-outline-secondary">Clear</a>
+            {% endif %}
+        </div>
+    </form>
+
     {% if applications %}
     <table class="table table-bordered table-hover">
         <thead class="table-dark">
@@ -49,7 +67,14 @@
         </tbody>
     </table>
     {% else %}
-    <div class="alert alert-info">No applications yet. <a href="{% url 'application_add' %}">Add one!</a></div>
+        {% if search_query %}
+            <div class="alert alert-info">
+                No applications found for "{{ search_query }}".
+                <a href="{% url 'application_list' %}">Clear search</a>
+            </div>
+        {% else %}
+            <div class="alert alert-info">No applications yet. <a href="{% url 'application_add' %}">Add one!</a></div>
+        {% endif %}
     {% endif %}
 </div>
 {% endblock %}
