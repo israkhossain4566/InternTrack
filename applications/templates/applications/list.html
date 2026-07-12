@@ -8,20 +8,71 @@
     </div>
 
     <form method="get" class="card card-body mb-3">
-        <label for="application-search" class="form-label">Search applications</label>
-        <div class="input-group">
-            <input
-                type="search"
-                id="application-search"
-                name="q"
-                class="form-control"
-                placeholder="Search by company, job title, or location"
-                value="{{ search_query }}"
-            >
-            <button type="submit" class="btn btn-outline-primary">Search</button>
-            {% if search_query %}
-                <a href="{% url 'application_list' %}" class="btn btn-outline-secondary">Clear</a>
-            {% endif %}
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="application-search" class="form-label">Search applications</label>
+                <input
+                    type="search"
+                    id="application-search"
+                    name="q"
+                    class="form-control"
+                    placeholder="Company, job title, or location"
+                    value="{{ search_query }}"
+                >
+            </div>
+            <div class="col-md-2">
+                <label for="status-filter" class="form-label">Status</label>
+                <select id="status-filter" name="status" class="form-select">
+                    <option value="">All statuses</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="company-filter" class="form-label">Company</label>
+                <select id="company-filter" name="company" class="form-select">
+                    <option value="">All companies</option>
+                    {% for company in company_options %}
+                        <option value="{{ company }}" {% if company_filter == company %}selected{% endif %}>{{ company }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="internship-type-filter" class="form-label">Internship Type</label>
+                <select id="internship-type-filter" name="internship_type" class="form-select">
+                    <option value="">All types</option>
+                    {% for internship_type in internship_type_options %}
+                        <option value="{{ internship_type }}" {% if internship_type_filter == internship_type %}selected{% endif %}>{{ internship_type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="deadline-filter" class="form-label">Deadline</label>
+                <input
+                    type="date"
+                    id="deadline-filter"
+                    name="deadline"
+                    class="form-control"
+                    value="{{ deadline_filter }}"
+                >
+            </div>
+            <div class="col-md-3">
+                <label for="date-applied-filter" class="form-label">Date Applied</label>
+                <input
+                    type="date"
+                    id="date-applied-filter"
+                    name="date_applied"
+                    class="form-control"
+                    value="{{ date_applied_filter }}"
+                >
+            </div>
+            <div class="col-md-6 d-flex gap-2">
+                <button type="submit" class="btn btn-outline-primary">Apply</button>
+                {% if search_or_filters_active %}
+                    <a href="{% url 'application_list' %}" class="btn btn-outline-secondary">Clear</a>
+                {% endif %}
+            </div>
         </div>
     </form>
 
@@ -67,10 +118,10 @@
         </tbody>
     </table>
     {% else %}
-        {% if search_query %}
+        {% if search_or_filters_active %}
             <div class="alert alert-info">
-                No applications found for "{{ search_query }}".
-                <a href="{% url 'application_list' %}">Clear search</a>
+                No applications match the current search or filters.
+                <a href="{% url 'application_list' %}">Clear all</a>
             </div>
         {% else %}
             <div class="alert alert-info">No applications yet. <a href="{% url 'application_add' %}">Add one!</a></div>
