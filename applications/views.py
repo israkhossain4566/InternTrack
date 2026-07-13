@@ -56,7 +56,7 @@ def application_list(request):
         date_applied_filter,
     ])
 
-    return render(request, 'applications/list.html', {
+    context = {
         'applications': applications,
         'search_query': search_query,
         'status_choices': JobApplication.STATUS_CHOICES,
@@ -69,7 +69,12 @@ def application_list(request):
         'date_applied_filter': date_applied_filter,
         'filters_active': filters_active,
         'search_or_filters_active': bool(search_query or filters_active),
-    })
+    }
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'applications/_application_results.html', context)
+
+    return render(request, 'applications/list.html', context)
 
 @login_required
 def application_add(request):

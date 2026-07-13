@@ -7,7 +7,7 @@
         <a href="{% url 'application_add' %}" class="btn btn-primary">+ Add Application</a>
     </div>
 
-    <form method="get" class="card card-body mb-3">
+    <form method="get" action="{% url 'application_list' %}" class="card card-body mb-3" id="application-search-form">
         <div class="row g-3 align-items-end">
             <div class="col-md-4">
                 <label for="application-search" class="form-label">Search applications</label>
@@ -69,63 +69,100 @@
             </div>
             <div class="col-md-6 d-flex gap-2">
                 <button type="submit" class="btn btn-outline-primary">Apply</button>
-                {% if search_or_filters_active %}
-                    <a href="{% url 'application_list' %}" class="btn btn-outline-secondary">Clear</a>
-                {% endif %}
+                <a
+                    href="{% url 'application_list' %}"
+                    id="application-clear"
+                    class="btn btn-outline-secondary {% if not search_or_filters_active %}d-none{% endif %}"
+                >
+                    Clear
+                </a>
             </div>
         </div>
     </form>
 
-    {% if applications %}
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Company</th>
-                <th>Job Title</th>
-                <th>Location</th>
-                <th>Status</th>
-                <th>Deadline</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for app in applications %}
-            <tr>
-                <td>{{ app.company_name }}</td>
-                <td>{{ app.job_title }}</td>
-                <td>{{ app.job_location }}</td>
-                <td>
-                    {% if app.status == 'Offer' %}
-                        <span class="badge bg-success">{{ app.status }}</span>
-                    {% elif app.status == 'Rejected' %}
-                        <span class="badge bg-danger">{{ app.status }}</span>
-                    {% elif app.status == 'Interview' %}
-                        <span class="badge bg-warning text-dark">{{ app.status }}</span>
-                    {% elif app.status == 'Applied' %}
-                        <span class="badge bg-primary">{{ app.status }}</span>
-                    {% else %}
-                        <span class="badge bg-secondary">{{ app.status }}</span>
-                    {% endif %}
-                </td>
-                <td>{{ app.deadline|default:"—" }}</td>
-                <td>
-                    <a href="{% url 'application_detail' app.pk %}" class="btn btn-sm btn-info">View</a>
-                    <a href="{% url 'application_edit' app.pk %}" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="{% url 'application_delete' app.pk %}" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-        {% if search_or_filters_active %}
-            <div class="alert alert-info">
-                No applications match the current search or filters.
-                <a href="{% url 'application_list' %}">Clear all</a>
-            </div>
-        {% else %}
-            <div class="alert alert-info">No applications yet. <a href="{% url 'application_add' %}">Add one!</a></div>
-        {% endif %}
-    {% endif %}
+    <div id="applications-results" aria-live="polite">
+        {% include "applications/_application_results.html" %}
+    </div>
 </div>
+
+<script>
+(function () {
+    const form = document.getElementById('application-search-form');
+    const searchInput = document.getElementById('application-search');
+    const results = document.getElementById('applications-results');
+    const clearButton = document.getElementById('application-clear');
+    let debounceTimer;
+    let activeRequest;
+
+    if (!form || !searchInput || !results) {
+        return;
+    }
+
+    function buildUrl() {
+        const params = new URLSearchParams(new FormData(form));
+
+        for (const key of Array.from(params.keys())) {
+            const value = params.get(key);
+            if (!value || !value.trim()) {
+                params.delete(key);
+            }
+        }
+
+        const queryString = params.toString();
+        return queryString ? `${form.action}?${queryString}` : form.action;
+    }
+
+    function updateClearButton() {
+        if (!clearButton) {
+            return;
+        }
+
+        const hasActiveInput = Array.from(new FormData(form).values()).some(
+            value => String(value).trim() !== ''
+        );
+        clearButton.classList.toggle('d-none', !hasActiveInput);
+    }
+
+    function loadApplications() {
+        const url = buildUrl();
+
+        if (activeRequest) {
+            activeRequest.abort();
+        }
+
+        activeRequest = new AbortController();
+        updateClearButton();
+
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            signal: activeRequest.signal
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Could not load applications.');
+                }
+                return response.text();
+            })
+            .then(html => {
+                results.innerHTML = html;
+                window.history.replaceState({}, '', url);
+            })
+            .catch(error => {
+                if (error.name !== 'AbortError') {
+                    results.innerHTML = '<div class="alert alert-danger">Could not update applications. Please try again.</div>';
+                }
+            });
+    }
+
+    searchInput.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(loadApplications, 300);
+    });
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        loadApplications();
+    });
+})();
+</script>
 {% endblock %}
