@@ -39,6 +39,59 @@
         {% endfor %}
     </tbody>
 </table>
+{% if page_obj.has_other_pages %}
+<nav aria-label="Applications pagination">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a
+                    class="page-link"
+                    href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                    data-page-link
+                >
+                    Previous
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Previous</span>
+            </li>
+        {% endif %}
+
+        {% for page_number in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == page_number %}active{% endif %}">
+                {% if page_obj.number == page_number %}
+                    <span class="page-link">{{ page_number }}</span>
+                {% else %}
+                    <a
+                        class="page-link"
+                        href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_number }}"
+                        data-page-link
+                    >
+                        {{ page_number }}
+                    </a>
+                {% endif %}
+            </li>
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a
+                    class="page-link"
+                    href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}"
+                    data-page-link
+                >
+                    Next
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Next</span>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
 {% else %}
     {% if search_or_filters_active %}
         <div class="alert alert-info">
