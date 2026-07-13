@@ -14,7 +14,7 @@
             <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
                 <div>
                     <h2 class="h5 mb-1">ATS Match Score</h2>
-                    <p class="text-muted mb-0">Calculated with TF-IDF and cosine similarity.</p>
+                    <p class="text-muted mb-0">{{ result.scoring_method }}</p>
                 </div>
                 <div class="text-lg-end">
                     <div class="display-4 fw-bold">{{ result.match_score }}%</div>
@@ -38,6 +38,39 @@
                     {{ result.match_score }}%
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fw-semibold">Scoring Breakdown</div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Semantic Similarity</dt>
+                <dd class="col-sm-8">{{ result.semantic_score }}%</dd>
+
+                <dt class="col-sm-4">Skill Coverage</dt>
+                <dd class="col-sm-8">
+                    {% if result.skill_coverage_score is not None %}
+                        {{ result.skill_coverage_score }}%
+                    {% else %}
+                        Not available
+                    {% endif %}
+                </dd>
+
+                <dt class="col-sm-4">Final ATS Score</dt>
+                <dd class="col-sm-8">{{ result.final_score }}%</dd>
+
+                <dt class="col-sm-4">Model</dt>
+                <dd class="col-sm-8">{{ result.model_name }}</dd>
+            </dl>
+
+            {% if result.skill_note %}
+                <p class="text-muted mb-0 mt-3">{{ result.skill_note }}</p>
+            {% endif %}
+
+            {% if result.semantic_error %}
+                <p class="text-muted mb-0 mt-3">{{ result.semantic_error }}</p>
+            {% endif %}
         </div>
     </div>
 

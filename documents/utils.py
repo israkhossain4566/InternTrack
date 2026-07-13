@@ -1,6 +1,15 @@
 import os
 import re
 import string
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+SENTENCE_TRANSFORMER_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+MODEL_DISPLAY_NAME = "all-MiniLM-L6-v2"
+_semantic_model = None
+_semantic_util = None
 
 
 TECHNICAL_KEYWORDS = [
@@ -85,6 +94,171 @@ def extract_uploaded_document_text(uploaded_file):
         return extract_docx_text(uploaded_file)
 
     return ""
+
+
+def prepare_text_for_embeddings(text):
+    if text is None:
+        return ""
+
+    text = str(text).strip()
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n\s*\n+", "\n\n", text)
+
+    return text.strip()
+
+
+def split_text_into_chunks(text, max_words=180):
+    cleaned_text = prepare_text_for_embeddings(text)
+    words = cleaned_text.split()
+
+    if not words:
+        return []
+
+    return [
+        " ".join(words[index : index + max_words])
+        for index in range(0, len(words), max_words)
+    ]
+
+
+def get_semantic_model():
+    global _semantic_model
+
+    if _semantic_model is not None:
+        return {
+            "success": True,
+            "model": _semantic_model,
+            "error": None,
+        }
+
+    try:
+        from sentence_transformers import SentenceTransformer
+
+        _semantic_model = SentenceTransformer(SENTENCE_TRANSFORMER_MODEL)
+        return {
+            "success": True,
+            "model": _semantic_model,
+            "error": None,
+        }
+    except Exception as exc:
+        logger.exception("Unable to load Sentence Transformer model.")
+        return {
+            "success": False,
+            "model": None,
+            "error": (
+                "Unable to load the semantic model. "
+                "If this is the first run, check your internet connection and installed packages."
+            ),
+        }
+
+
+def get_sentence_transformer_util():
+    global _semantic_util
+
+    if _semantic_util is not None:
+        return {
+            "success": True,
+            "util": _semantic_util,
+            "error": None,
+        }
+
+    try:
+        from sentence_transformers import util
+
+        _semantic_util = util
+        return {
+            "success": True,
+            "util": _semantic_util,
+            "error": None,
+        }
+    except Exception as exc:
+        logger.exception("Unable to load Sentence Transformer utilities.")
+        return {
+            "success": False,
+            "util": None,
+            "error": "Unable to load the semantic similarity utilities.",
+        }
+
+
+def clamp_score(score):
+    return max(0, min(100, score))
+
+
+def calculate_semantic_similarity_score(resume_text, job_description_text):
+    resume_text = prepare_text_for_embeddings(resume_text)
+    job_description_text = prepare_text_for_embeddings(job_description_text)
+
+    if not resume_text:
+        return {
+            "success": False,
+            "semantic_score": 0,
+            "error": "The selected resume does not contain readable text.",
+        }
+
+    if not job_description_text:
+        return {
+            "success": False,
+            "semantic_score": 0,
+            "error": "Please paste a job description with readable text.",
+        }
+
+    model_result = get_semantic_model()
+    if not model_result["success"]:
+        return {
+            "success": False,
+            "semantic_score": 0,
+            "error": model_result["error"],
+        }
+
+    util_result = get_sentence_transformer_util()
+    if not util_result["success"]:
+        return {
+            "success": False,
+            "semantic_score": 0,
+            "error": util_result["error"],
+        }
+
+    resume_chunks = split_text_into_chunks(resume_text)
+    job_chunks = split_text_into_chunks(job_description_text)
+
+    if not resume_chunks or not job_chunks:
+        return {
+            "success": False,
+            "semantic_score": 0,
+            "error": "Not enough readable text was found for semantic comparison.",
+        }
+
+    try:
+        model = model_result["model"]
+        util = util_result["util"]
+        resume_embeddings = model.encode(
+            resume_chunks,
+            convert_to_tensor=True,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        )
+        job_embeddings = model.encode(
+            job_chunks,
+            convert_to_tensor=True,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        )
+        similarity_matrix = util.cos_sim(job_embeddings, resume_embeddings)
+        best_scores = similarity_matrix.max(dim=1).values
+        similarity = best_scores.mean().item()
+        semantic_score = clamp_score(similarity * 100)
+
+        return {
+            "success": True,
+            "semantic_score": semantic_score,
+            "error": None,
+        }
+    except Exception as exc:
+        logger.exception("Semantic similarity calculation failed.")
+        return {
+            "success": False,
+            "semantic_score": 0,
+            "error": "Unable to calculate semantic similarity with the local model.",
+        }
 
 
 def get_english_stopwords():
@@ -186,3 +360,19 @@ def generate_suggestions(missing_keywords):
         suggestions.append(suggestion)
 
     return suggestions
+
+
+def calculate_skill_coverage_score(matched_keywords, missing_keywords):
+    total_required_skills = len(matched_keywords) + len(missing_keywords)
+
+    if total_required_skills == 0:
+        return None
+
+    return (len(matched_keywords) / total_required_skills) * 100
+
+
+def calculate_hybrid_score(semantic_score, skill_coverage_score):
+    if skill_coverage_score is None:
+        return clamp_score(semantic_score)
+
+    return clamp_score((semantic_score * 0.60) + (skill_coverage_score * 0.40))
