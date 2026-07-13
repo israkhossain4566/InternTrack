@@ -123,8 +123,8 @@
         clearButton.classList.toggle('d-none', !hasActiveInput);
     }
 
-    function loadApplications() {
-        const url = buildUrl();
+    function loadApplications(requestedUrl) {
+        const url = requestedUrl || buildUrl();
 
         if (activeRequest) {
             activeRequest.abort();
@@ -162,6 +162,17 @@
     form.addEventListener('submit', function (event) {
         event.preventDefault();
         loadApplications();
+    });
+
+    results.addEventListener('click', function (event) {
+        const pageLink = event.target.closest('[data-page-link]');
+
+        if (!pageLink) {
+            return;
+        }
+
+        event.preventDefault();
+        loadApplications(pageLink.href);
     });
 })();
 </script>

@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils.dateparse import parse_date
 from .models import Company, JobApplication
@@ -55,9 +56,16 @@ def application_list(request):
         deadline_filter,
         date_applied_filter,
     ])
+    query_params = request.GET.copy()
+    query_params.pop('page', None)
+    query_string = query_params.urlencode()
+    paginator = Paginator(applications.order_by('id'), 10)
+    page_obj = paginator.get_page(request.GET.get('page'))
 
     context = {
-        'applications': applications,
+        'applications': page_obj.object_list,
+        'page_obj': page_obj,
+        'query_string': query_string,
         'search_query': search_query,
         'status_choices': JobApplication.STATUS_CHOICES,
         'company_options': company_options,
