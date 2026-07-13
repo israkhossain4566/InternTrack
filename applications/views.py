@@ -1,13 +1,20 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.utils.dateparse import parse_date
 from .models import Company, JobApplication
 from .forms import JobApplicationForm, CompanyForm
 
 @login_required
 def application_list(request):
-    applications = JobApplication.objects.filter(user=request.user)
+    user_applications = JobApplication.objects.filter(user=request.user)
+    applications = user_applications
     search_query = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', '').strip()
+    company_filter = request.GET.get('company', '').strip()
+    internship_type_filter = request.GET.get('internship_type', '').strip()
+    deadline_filter = request.GET.get('deadline', '').strip()
+    date_applied_filter = request.GET.get('date_applied', '').strip()
 
     if search_query:
         applications = applications.filter(
@@ -16,9 +23,52 @@ def application_list(request):
             Q(job_location__icontains=search_query)
         )
 
+    if status_filter:
+        applications = applications.filter(status=status_filter)
+
+    if company_filter:
+        applications = applications.filter(company_name=company_filter)
+
+    if internship_type_filter:
+        applications = applications.filter(internship_type=internship_type_filter)
+
+    if deadline_filter:
+        deadline_date = parse_date(deadline_filter)
+        if deadline_date:
+            applications = applications.filter(deadline=deadline_date)
+
+    if date_applied_filter:
+        application_date = parse_date(date_applied_filter)
+        if application_date:
+            applications = applications.filter(application_date=application_date)
+
+    company_options = user_applications.exclude(company_name='').order_by(
+        'company_name'
+    ).values_list('company_name', flat=True).distinct()
+    internship_type_options = user_applications.exclude(internship_type='').order_by(
+        'internship_type'
+    ).values_list('internship_type', flat=True).distinct()
+    filters_active = any([
+        status_filter,
+        company_filter,
+        internship_type_filter,
+        deadline_filter,
+        date_applied_filter,
+    ])
+
     return render(request, 'applications/list.html', {
         'applications': applications,
         'search_query': search_query,
+        'status_choices': JobApplication.STATUS_CHOICES,
+        'company_options': company_options,
+        'internship_type_options': internship_type_options,
+        'status_filter': status_filter,
+        'company_filter': company_filter,
+        'internship_type_filter': internship_type_filter,
+        'deadline_filter': deadline_filter,
+        'date_applied_filter': date_applied_filter,
+        'filters_active': filters_active,
+        'search_or_filters_active': bool(search_query or filters_active),
     })
 
 @login_required
