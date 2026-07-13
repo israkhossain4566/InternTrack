@@ -3,3 +3,6 @@ scikit-learn
 nltk
 PyPDF2
 python-docx
+sentence-transformers
+torch
+transformers

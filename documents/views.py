@@ -1,3 +1,6 @@
+import logging
+import os
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse, reverse_lazy
@@ -15,11 +18,19 @@ from django.views.generic import (
 from .forms import ATSCheckerForm, UploadedDocumentForm
 from .models import UploadedDocument
 from .utils import (
+    MODEL_DISPLAY_NAME,
     calculate_ats_score,
+    calculate_hybrid_score,
+    calculate_semantic_similarity_score,
+    calculate_skill_coverage_score,
     extract_uploaded_document_text,
     generate_suggestions,
     get_keyword_analysis,
+    prepare_text_for_embeddings,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 def format_display_datetime(value):
@@ -142,7 +153,23 @@ class ATSCheckerView(LoginRequiredMixin, FormView):
         resume = form.cleaned_data["resume"]
         job_description_text = form.cleaned_data.get("job_description_text")
 
-        resume_text = extract_uploaded_document_text(resume.file)
+        extension = os.path.splitext(resume.file.name)[1].lower()
+        if extension not in [".pdf", ".doc", ".docx"]:
+            form.add_error(
+                "resume",
+                "Unsupported file type. Please use a PDF, DOC, or DOCX resume.",
+            )
+            return self.form_invalid(form)
+
+        try:
+            resume_text = extract_uploaded_document_text(resume.file)
+        except Exception:
+            logger.exception("Resume text extraction failed.")
+            form.add_error(
+                "resume",
+                "Could not extract text from this resume. Please use a readable PDF, DOC, or DOCX resume.",
+            )
+            return self.form_invalid(form)
 
         if not resume_text:
             form.add_error(
@@ -151,7 +178,8 @@ class ATSCheckerView(LoginRequiredMixin, FormView):
             )
             return self.form_invalid(form)
 
-        job_text = job_description_text
+        resume_text = prepare_text_for_embeddings(resume_text)
+        job_text = prepare_text_for_embeddings(job_description_text)
         job_source = "Pasted job description"
 
         if not job_text:
@@ -161,12 +189,49 @@ class ATSCheckerView(LoginRequiredMixin, FormView):
             )
             return self.form_invalid(form)
 
-        match_score = calculate_ats_score(resume_text, job_text)
         matched_keywords, missing_keywords = get_keyword_analysis(resume_text, job_text)
         suggestions = generate_suggestions(missing_keywords)
+        skill_coverage_score = calculate_skill_coverage_score(
+            matched_keywords,
+            missing_keywords,
+        )
+        semantic_result = calculate_semantic_similarity_score(resume_text, job_text)
+
+        if semantic_result["success"]:
+            semantic_score = semantic_result["semantic_score"]
+            scoring_method = "60% semantic similarity + 40% skill coverage"
+            semantic_error = None
+        else:
+            semantic_score = calculate_ats_score(resume_text, job_text)
+            scoring_method = "TF-IDF fallback + skill coverage"
+            semantic_error = semantic_result["error"]
+
+        final_score = calculate_hybrid_score(semantic_score, skill_coverage_score)
+        rounded_semantic_score = round(semantic_score)
+        rounded_skill_coverage_score = (
+            None if skill_coverage_score is None else round(skill_coverage_score)
+        )
+        rounded_final_score = round(final_score)
+        skill_note = ""
+
+        if skill_coverage_score is None:
+            skill_note = (
+                "No predefined skills were detected in the job description, "
+                "so the final score uses semantic similarity only."
+            )
 
         self.request.session["ats_result"] = {
-            "match_score": match_score,
+            "match_score": rounded_final_score,
+            "semantic_score": rounded_semantic_score,
+            "semantic_score_raw": semantic_score,
+            "skill_coverage_score": rounded_skill_coverage_score,
+            "skill_coverage_score_raw": skill_coverage_score,
+            "final_score": rounded_final_score,
+            "final_score_raw": final_score,
+            "scoring_method": scoring_method,
+            "model_name": MODEL_DISPLAY_NAME,
+            "semantic_error": semantic_error,
+            "skill_note": skill_note,
             "resume_title": resume.title,
             "resume_version": resume.version,
             "resume_filename": resume.file.name,
@@ -174,10 +239,13 @@ class ATSCheckerView(LoginRequiredMixin, FormView):
             "job_source": job_source,
             "job_word_count": len(job_text.split()),
             "job_character_count": len(job_text),
-            "similarity_score": f"{match_score}%",
+            "similarity_score": f"{rounded_final_score}%",
             "matched_keywords": matched_keywords,
             "missing_keywords": missing_keywords,
+            "matched_skills": matched_keywords,
+            "missing_skills": missing_keywords,
             "suggestions": suggestions,
+            "recommendations": suggestions,
             "analysis_date": format_display_datetime(timezone.now()),
         }
 

@@ -8,12 +8,56 @@
     <p class="text-muted mb-0">Compare one uploaded resume with a job description.</p>
 </div>
 
-<form method="post" class="card p-4">
+<style>
+    .ats-loading-panel {
+        border-left: 4px solid var(--bs-primary);
+        background: #f8fbff;
+    }
+
+    .ats-loading-dots span {
+        animation: atsDotPulse 1.2s infinite ease-in-out;
+        opacity: 0.35;
+    }
+
+    .ats-loading-dots span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .ats-loading-dots span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes atsDotPulse {
+        0%, 80%, 100% {
+            opacity: 0.35;
+        }
+        40% {
+            opacity: 1;
+        }
+    }
+</style>
+
+<form method="post" class="card p-4" id="ats-checker-form">
     {% csrf_token %}
 
     {% if form.non_field_errors %}
         <div class="alert alert-danger">{{ form.non_field_errors }}</div>
     {% endif %}
+
+    <div class="alert ats-loading-panel d-none mb-4" id="ats-loading-panel" role="status" aria-live="polite">
+        <div class="d-flex align-items-start gap-3">
+            <div class="spinner-border text-primary flex-shrink-0" aria-hidden="true"></div>
+            <div>
+                <div class="fw-semibold">
+                    Analyzing resume match
+                    <span class="ats-loading-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span>
+                </div>
+                <div class="small text-muted">
+                    Extracting resume text, comparing it with the job description, and calculating the ATS score.
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="mb-3">
         <label class="form-label" for="{{ form.resume.id_for_label }}">{{ form.resume.label }}</label>
@@ -35,8 +79,35 @@
     </div>
 
     <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Check Match Score</button>
-        <a class="btn btn-secondary" href="{% url 'documents:document_list' %}">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="ats-submit-button">
+            <span class="spinner-border spinner-border-sm me-2 d-none" id="ats-submit-spinner" aria-hidden="true"></span>
+            <span id="ats-submit-label">Check Match Score</span>
+        </button>
+        <a class="btn btn-secondary" href="{% url 'documents:document_list' %}" id="ats-cancel-link">Cancel</a>
     </div>
 </form>
+
+<script>
+    (function () {
+        const form = document.getElementById("ats-checker-form");
+        const loadingPanel = document.getElementById("ats-loading-panel");
+        const submitButton = document.getElementById("ats-submit-button");
+        const submitSpinner = document.getElementById("ats-submit-spinner");
+        const submitLabel = document.getElementById("ats-submit-label");
+        const cancelLink = document.getElementById("ats-cancel-link");
+
+        form.addEventListener("submit", function () {
+            if (!form.checkValidity()) {
+                return;
+            }
+
+            loadingPanel.classList.remove("d-none");
+            submitSpinner.classList.remove("d-none");
+            submitLabel.textContent = "Analyzing...";
+            submitButton.disabled = true;
+            cancelLink.classList.add("disabled");
+            cancelLink.setAttribute("aria-disabled", "true");
+        });
+    })();
+</script>
 {% endblock %}
