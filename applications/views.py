@@ -1,109 +1,124 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils.dateparse import parse_date
+from django.views.generic import DetailView, ListView
+
 from .models import Company, JobApplication
 from .forms import JobApplicationForm, CompanyForm
 
-@login_required
-def application_list(request):
-    user_applications = JobApplication.objects.filter(user=request.user)
-    applications = user_applications
-    search_query = request.GET.get('q', '').strip()
-    status_filter = request.GET.get('status', '').strip()
-    company_filter = request.GET.get('company', '').strip()
-    internship_type_filter = request.GET.get('internship_type', '').strip()
-    deadline_filter = request.GET.get('deadline', '').strip()
-    date_applied_filter = request.GET.get('date_applied', '').strip()
-    sort_filter = request.GET.get('sort', '').strip()
-    direction_filter = request.GET.get('direction', 'asc').strip()
-
-    if search_query:
-        applications = applications.filter(
-            Q(company_name__icontains=search_query) |
-            Q(job_title__icontains=search_query) |
-            Q(job_location__icontains=search_query)
-        )
-
-    if status_filter:
-        applications = applications.filter(status=status_filter)
-
-    if company_filter:
-        applications = applications.filter(company_name=company_filter)
-
-    if internship_type_filter:
-        applications = applications.filter(internship_type=internship_type_filter)
-
-    if deadline_filter:
-        deadline_date = parse_date(deadline_filter)
-        if deadline_date:
-            applications = applications.filter(deadline=deadline_date)
-
-    if date_applied_filter:
-        application_date = parse_date(date_applied_filter)
-        if application_date:
-            applications = applications.filter(application_date=application_date)
-
-    company_options = user_applications.exclude(company_name='').order_by(
-        'company_name'
-    ).values_list('company_name', flat=True).distinct()
-    internship_type_options = user_applications.exclude(internship_type='').order_by(
-        'internship_type'
-    ).values_list('internship_type', flat=True).distinct()
-    filters_active = any([
-        status_filter,
-        company_filter,
-        internship_type_filter,
-        deadline_filter,
-        date_applied_filter,
-    ])
+class ApplicationListView(LoginRequiredMixin, ListView):
+    model = JobApplication
+    template_name = 'applications/list.html'
+    context_object_name = 'applications'
+    paginate_by = 10
     sort_options = [
         ('company_name', 'Company'),
         ('status', 'Status'),
         ('deadline', 'Deadline'),
         ('application_date', 'Application Date'),
     ]
-    sort_fields = {value: value for value, label in sort_options}
-    sort_field = sort_fields.get(sort_filter)
-    sort_direction = 'desc' if direction_filter == 'desc' else 'asc'
 
-    if sort_field:
-        order_field = f'-{sort_field}' if sort_direction == 'desc' else sort_field
-        applications = applications.order_by(order_field, 'id')
-    else:
-        applications = applications.order_by('id')
+    def dispatch(self, request, *args, **kwargs):
+        self.search_query = request.GET.get('q', '').strip()
+        self.status_filter = request.GET.get('status', '').strip()
+        self.company_filter = request.GET.get('company', '').strip()
+        self.internship_type_filter = request.GET.get('internship_type', '').strip()
+        self.deadline_filter = request.GET.get('deadline', '').strip()
+        self.date_applied_filter = request.GET.get('date_applied', '').strip()
+        self.sort_filter = request.GET.get('sort', '').strip()
+        self.direction_filter = request.GET.get('direction', 'asc').strip()
+        self.sort_direction = 'desc' if self.direction_filter == 'desc' else 'asc'
+        return super().dispatch(request, *args, **kwargs)
 
-    query_params = request.GET.copy()
-    query_params.pop('page', None)
-    query_string = query_params.urlencode()
-    paginator = Paginator(applications, 10)
-    page_obj = paginator.get_page(request.GET.get('page'))
+    def get_queryset(self):
+        applications = JobApplication.objects.filter(user=self.request.user)
 
-    context = {
-        'applications': page_obj.object_list,
-        'page_obj': page_obj,
-        'query_string': query_string,
-        'search_query': search_query,
-        'status_choices': JobApplication.STATUS_CHOICES,
-        'company_options': company_options,
-        'internship_type_options': internship_type_options,
-        'status_filter': status_filter,
-        'company_filter': company_filter,
-        'internship_type_filter': internship_type_filter,
-        'deadline_filter': deadline_filter,
-        'date_applied_filter': date_applied_filter,
-        'sort_options': sort_options,
-        'sort_filter': sort_filter,
-        'direction_filter': sort_direction,
-        'filters_active': filters_active,
-        'search_or_filters_active': bool(search_query or filters_active or sort_field),
-    }
+        if self.search_query:
+            applications = applications.filter(
+                Q(company_name__icontains=self.search_query) |
+                Q(job_title__icontains=self.search_query) |
+                Q(job_location__icontains=self.search_query)
+            )
 
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return render(request, 'applications/_application_results.html', context)
+        if self.status_filter:
+            applications = applications.filter(status=self.status_filter)
 
-    return render(request, 'applications/list.html', context)
+        if self.company_filter:
+            applications = applications.filter(company_name=self.company_filter)
+
+        if self.internship_type_filter:
+            applications = applications.filter(internship_type=self.internship_type_filter)
+
+        if self.deadline_filter:
+            deadline_date = parse_date(self.deadline_filter)
+            if deadline_date:
+                applications = applications.filter(deadline=deadline_date)
+
+        if self.date_applied_filter:
+            application_date = parse_date(self.date_applied_filter)
+            if application_date:
+                applications = applications.filter(application_date=application_date)
+
+        sort_fields = {value: value for value, label in self.sort_options}
+        self.sort_field = sort_fields.get(self.sort_filter)
+
+        if self.sort_field:
+            order_field = f'-{self.sort_field}' if self.sort_direction == 'desc' else self.sort_field
+            applications = applications.order_by(order_field, 'id')
+        else:
+            applications = applications.order_by('id')
+
+        return applications
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user_applications = JobApplication.objects.filter(user=self.request.user)
+        filters_active = any([
+            self.status_filter,
+            self.company_filter,
+            self.internship_type_filter,
+            self.deadline_filter,
+            self.date_applied_filter,
+        ])
+        query_params = self.request.GET.copy()
+        query_params.pop('page', None)
+
+        context.update({
+            'search_query': self.search_query,
+            'status_choices': JobApplication.STATUS_CHOICES,
+            'company_options': user_applications.exclude(company_name='').order_by(
+                'company_name'
+            ).values_list('company_name', flat=True).distinct(),
+            'internship_type_options': user_applications.exclude(internship_type='').order_by(
+                'internship_type'
+            ).values_list('internship_type', flat=True).distinct(),
+            'status_filter': self.status_filter,
+            'company_filter': self.company_filter,
+            'internship_type_filter': self.internship_type_filter,
+            'deadline_filter': self.deadline_filter,
+            'date_applied_filter': self.date_applied_filter,
+            'sort_options': self.sort_options,
+            'sort_filter': self.sort_filter,
+            'direction_filter': self.sort_direction,
+            'query_string': query_params.urlencode(),
+            'filters_active': filters_active,
+            'search_or_filters_active': bool(self.search_query or filters_active or self.sort_field),
+        })
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            response = render(self.request, 'applications/_application_results.html', context)
+        else:
+            response = super().render_to_response(context, **response_kwargs)
+
+        if self.company_filter:
+            response.set_cookie('most_searched_company', self.company_filter, max_age=86400 * 30)
+        elif self.search_query:
+            response.set_cookie('most_searched_company', self.search_query, max_age=86400 * 30)
+        return response
 
 @login_required
 def application_add(request):
@@ -143,16 +158,26 @@ def application_delete(request, pk):
         return redirect('application_list')
     return render(request, 'applications/confirm_delete.html', {'app': app})
 
-@login_required
-def application_detail(request, pk):
-    app = get_object_or_404(JobApplication, pk=pk, user=request.user)
-    # Track recently viewed in session (dashboard feature)
-    try:
-        from dashboard.views import track_recently_viewed
-        track_recently_viewed(request, pk)
-    except ImportError:
-        pass
-    return render(request, 'applications/detail.html', {'app': app})
+class ApplicationDetailView(LoginRequiredMixin, DetailView):
+    model = JobApplication
+    template_name = 'applications/detail.html'
+    context_object_name = 'app'
+
+    def get_queryset(self):
+        return JobApplication.objects.filter(user=self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        try:
+            from dashboard.views import track_recently_viewed
+            track_recently_viewed(request, self.object.pk)
+        except ImportError:
+            pass
+        return response
+
+
+application_list = ApplicationListView.as_view()
+application_detail = ApplicationDetailView.as_view()
 
 def trigger_notifications(user, app, old_status, old_deadline, old_interview):
     # Import here to avoid circular import

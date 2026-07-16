@@ -1,0 +1,32 @@
+[
+  {
+    "model": "applications.company",
+    "pk": 1,
+    "fields": {
+      "name": "Google",
+      "website": "https://careers.google.com/",
+      "industry": "Technology",
+      "location": "Waterloo, ON"
+    }
+  },
+  {
+    "model": "applications.company",
+    "pk": 2,
+    "fields": {
+      "name": "Shopify",
+      "website": "https://www.shopify.com/careers",
+      "industry": "E-commerce",
+      "location": "Ottawa, ON"
+    }
+  },
+  {
+    "model": "applications.company",
+    "pk": 3,
+    "fields": {
+      "name": "RBC",
+      "website": "https://jobs.rbc.com/ca/en/students-graduates",
+      "industry": "Finance",
+      "location": "Toronto, ON"
+    }
+  }
+]
