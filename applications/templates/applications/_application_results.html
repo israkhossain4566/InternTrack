@@ -1,0 +1,106 @@
+{% if applications %}
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Company</th>
+            <th>Job Title</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Application Date</th>
+            <th>Deadline</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for app in applications %}
+        <tr>
+            <td>{{ app.company_name }}</td>
+            <td>{{ app.job_title }}</td>
+            <td>{{ app.job_location }}</td>
+            <td>
+                {% if app.status == 'Offer' %}
+                    <span class="badge bg-success">{{ app.status }}</span>
+                {% elif app.status == 'Rejected' %}
+                    <span class="badge bg-danger">{{ app.status }}</span>
+                {% elif app.status == 'Interview' %}
+                    <span class="badge bg-warning text-dark">{{ app.status }}</span>
+                {% elif app.status == 'Applied' %}
+                    <span class="badge bg-primary">{{ app.status }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ app.status }}</span>
+                {% endif %}
+            </td>
+            <td>{{ app.application_date }}</td>
+            <td>{{ app.deadline|default:"N/A" }}</td>
+            <td>
+                <a href="{% url 'application_detail' app.pk %}" class="btn btn-sm btn-info">View</a>
+                <a href="{% url 'application_edit' app.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                <a href="{% url 'application_delete' app.pk %}" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% if page_obj.has_other_pages %}
+<nav aria-label="Applications pagination">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a
+                    class="page-link"
+                    href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                    data-page-link
+                >
+                    Previous
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Previous</span>
+            </li>
+        {% endif %}
+
+        {% for page_number in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == page_number %}active{% endif %}">
+                {% if page_obj.number == page_number %}
+                    <span class="page-link">{{ page_number }}</span>
+                {% else %}
+                    <a
+                        class="page-link"
+                        href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_number }}"
+                        data-page-link
+                    >
+                        {{ page_number }}
+                    </a>
+                {% endif %}
+            </li>
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a
+                    class="page-link"
+                    href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}"
+                    data-page-link
+                >
+                    Next
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Next</span>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% else %}
+    {% if search_or_filters_active %}
+        <div class="alert alert-info">
+            No applications match the current search or filters.
+            <a href="{% url 'application_list' %}">Clear all</a>
+        </div>
+    {% else %}
+        <div class="alert alert-info">No applications yet. <a href="{% url 'application_add' %}">Add one!</a></div>
+    {% endif %}
+{% endif %}

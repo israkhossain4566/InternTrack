@@ -12,6 +12,13 @@ class ApplicationListView(LoginRequiredMixin, ListView):
     model = JobApplication
     template_name = 'applications/list.html'
     context_object_name = 'applications'
+    paginate_by = 10
+    sort_options = [
+        ('company_name', 'Company'),
+        ('status', 'Status'),
+        ('deadline', 'Deadline'),
+        ('application_date', 'Application Date'),
+    ]
 
     def dispatch(self, request, *args, **kwargs):
         self.search_query = request.GET.get('q', '').strip()
@@ -20,6 +27,9 @@ class ApplicationListView(LoginRequiredMixin, ListView):
         self.internship_type_filter = request.GET.get('internship_type', '').strip()
         self.deadline_filter = request.GET.get('deadline', '').strip()
         self.date_applied_filter = request.GET.get('date_applied', '').strip()
+        self.sort_filter = request.GET.get('sort', '').strip()
+        self.direction_filter = request.GET.get('direction', 'asc').strip()
+        self.sort_direction = 'desc' if self.direction_filter == 'desc' else 'asc'
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -51,6 +61,15 @@ class ApplicationListView(LoginRequiredMixin, ListView):
             if application_date:
                 applications = applications.filter(application_date=application_date)
 
+        sort_fields = {value: value for value, label in self.sort_options}
+        self.sort_field = sort_fields.get(self.sort_filter)
+
+        if self.sort_field:
+            order_field = f'-{self.sort_field}' if self.sort_direction == 'desc' else self.sort_field
+            applications = applications.order_by(order_field, 'id')
+        else:
+            applications = applications.order_by('id')
+
         return applications
 
     def get_context_data(self, **kwargs):
@@ -63,6 +82,8 @@ class ApplicationListView(LoginRequiredMixin, ListView):
             self.deadline_filter,
             self.date_applied_filter,
         ])
+        query_params = self.request.GET.copy()
+        query_params.pop('page', None)
 
         context.update({
             'search_query': self.search_query,
@@ -78,13 +99,21 @@ class ApplicationListView(LoginRequiredMixin, ListView):
             'internship_type_filter': self.internship_type_filter,
             'deadline_filter': self.deadline_filter,
             'date_applied_filter': self.date_applied_filter,
+            'sort_options': self.sort_options,
+            'sort_filter': self.sort_filter,
+            'direction_filter': self.sort_direction,
+            'query_string': query_params.urlencode(),
             'filters_active': filters_active,
-            'search_or_filters_active': bool(self.search_query or filters_active),
+            'search_or_filters_active': bool(self.search_query or filters_active or self.sort_field),
         })
         return context
 
     def render_to_response(self, context, **response_kwargs):
-        response = super().render_to_response(context, **response_kwargs)
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            response = render(self.request, 'applications/_application_results.html', context)
+        else:
+            response = super().render_to_response(context, **response_kwargs)
+
         if self.company_filter:
             response.set_cookie('most_searched_company', self.company_filter, max_age=86400 * 30)
         elif self.search_query:
