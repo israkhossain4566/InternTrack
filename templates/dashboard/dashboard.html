@@ -1,90 +1,98 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard – InternTrack{% endblock %}
+{% block title %}Dashboard | InternTrack{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">My Dashboard</h1>
+<div class="page-heading">
+    <div>
+        <div class="page-kicker">Analytics</div>
+        <h1 class="page-title">My Dashboard</h1>
+        <p class="page-subtitle">A snapshot of your internship search activity, outcomes, and browsing history.</p>
+    </div>
     {% if user.is_staff %}
-    <a href="{% url 'dashboard:admin_stats' %}" class="btn btn-dark btn-sm">
-        Admin Stats
+    <a href="{% url 'dashboard:admin_stats' %}" class="btn btn-dark">
+        <i class="bi bi-shield-lock me-1"></i>Admin Stats
     </a>
     {% endif %}
 </div>
 
-<!-- ── Stat Cards ─────────────────────────────────────────── -->
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-4 col-lg-2">
-        <div class="card text-center border-0 shadow-sm h-100">
+        <div class="metric-card it-card h-100" style="--metric-color: #2563eb;">
             <div class="card-body">
-                <div class="fs-1 fw-bold text-primary">{{ total }}</div>
-                <div class="text-muted small">Total</div>
+                <span class="metric-icon mb-3"><i class="bi bi-briefcase"></i></span>
+                <div class="metric-value">{{ total }}</div>
+                <div class="metric-label">Total</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-4 col-lg-2">
-        <div class="card text-center border-0 shadow-sm h-100">
+        <div class="metric-card it-card h-100" style="--metric-color: #64748b;">
             <div class="card-body">
-                <div class="fs-1 fw-bold text-secondary">{{ saved }}</div>
-                <div class="text-muted small">Saved</div>
+                <span class="metric-icon mb-3"><i class="bi bi-bookmark"></i></span>
+                <div class="metric-value">{{ saved }}</div>
+                <div class="metric-label">Saved</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-4 col-lg-2">
-        <div class="card text-center border-0 shadow-sm h-100">
+        <div class="metric-card it-card h-100" style="--metric-color: #0891b2;">
             <div class="card-body">
-                <div class="fs-1 fw-bold text-info">{{ applied }}</div>
-                <div class="text-muted small">Applied</div>
+                <span class="metric-icon mb-3"><i class="bi bi-send"></i></span>
+                <div class="metric-value">{{ applied }}</div>
+                <div class="metric-label">Applied</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-4 col-lg-2">
-        <div class="card text-center border-0 shadow-sm h-100">
+        <div class="metric-card it-card h-100" style="--metric-color: #d97706;">
             <div class="card-body">
-                <div class="fs-1 fw-bold text-warning">{{ interview }}</div>
-                <div class="text-muted small">Interview</div>
+                <span class="metric-icon mb-3"><i class="bi bi-calendar-check"></i></span>
+                <div class="metric-value">{{ interview }}</div>
+                <div class="metric-label">Interview</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-4 col-lg-2">
-        <div class="card text-center border-0 shadow-sm h-100">
+        <div class="metric-card it-card h-100" style="--metric-color: #0f9f6e;">
             <div class="card-body">
-                <div class="fs-1 fw-bold text-success">{{ offer }}</div>
-                <div class="text-muted small">Offer</div>
+                <span class="metric-icon mb-3"><i class="bi bi-trophy"></i></span>
+                <div class="metric-value">{{ offer }}</div>
+                <div class="metric-label">Offer</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-4 col-lg-2">
-        <div class="card text-center border-0 shadow-sm h-100">
+        <div class="metric-card it-card h-100" style="--metric-color: #dc2626;">
             <div class="card-body">
-                <div class="fs-1 fw-bold text-danger">{{ rejected }}</div>
-                <div class="text-muted small">Rejected</div>
+                <span class="metric-icon mb-3"><i class="bi bi-x-circle"></i></span>
+                <div class="metric-value">{{ rejected }}</div>
+                <div class="metric-label">Rejected</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ── Charts ─────────────────────────────────────────────── -->
 <div class="row g-4 mb-4">
     <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-dark text-white">Status Distribution</div>
+        <div class="it-card h-100">
+            <div class="card-header bg-white border-bottom fw-bold">Status Distribution</div>
             <div class="card-body d-flex align-items-center justify-content-center">
                 <canvas id="statusChart" style="max-height:260px;"></canvas>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-dark text-white">Monthly Applications</div>
+        <div class="it-card h-100">
+            <div class="card-header bg-white border-bottom fw-bold">Monthly Applications</div>
             <div class="card-body">
                 <canvas id="monthlyChart" style="max-height:260px;"></canvas>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-dark text-white">Offer Ratio</div>
+        <div class="it-card h-100">
+            <div class="card-header bg-white border-bottom fw-bold">Offer Ratio</div>
             <div class="card-body d-flex align-items-center justify-content-center">
                 <canvas id="offerChart" style="max-height:260px;"></canvas>
             </div>
@@ -92,11 +100,10 @@
     </div>
 </div>
 
-<!-- ── Session & Cookie Info ──────────────────────────────── -->
 <div class="row g-4 mb-4">
     <div class="col-md-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-dark text-white">Session Info</div>
+        <div class="it-card h-100">
+            <div class="card-header bg-white border-bottom fw-bold">Session Info</div>
             <div class="card-body">
                 <dl class="row mb-0">
                     <dt class="col-sm-5">Last Login</dt>
@@ -112,8 +119,8 @@
                         {% if recently_viewed %}
                             <ul class="list-unstyled mb-0">
                                 {% for app in recently_viewed %}
-                                <li>
-                                    <a href="{% url 'application_detail' app.pk %}" class="text-decoration-none">
+                                <li class="mb-2">
+                                    <a href="{% url 'application_detail' app.pk %}" class="text-decoration-none fw-semibold">
                                         {{ app.job_title }} @ {{ app.company_name }}
                                     </a>
                                     <span class="badge bg-secondary ms-1">{{ app.status }}</span>
@@ -129,8 +136,8 @@
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-dark text-white">Visit Tracking</div>
+        <div class="it-card h-100">
+            <div class="card-header bg-white border-bottom fw-bold">Visit Tracking</div>
             <div class="card-body">
                 <dl class="row mb-0">
                     <dt class="col-sm-6">Today's Visits</dt>
@@ -151,30 +158,27 @@
     </div>
 </div>
 
-<!-- ── Chart.js ───────────────────────────────────────────── -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 const statusLabels = {{ status_labels|safe }};
-const statusData   = {{ status_data|safe }};
-const monthLabels  = {{ month_labels|safe }};
-const monthlyData  = {{ monthly_data|safe }};
-const offerLabels  = {{ offer_labels|safe }};
-const offerData    = {{ offer_data|safe }};
+const statusData = {{ status_data|safe }};
+const monthLabels = {{ month_labels|safe }};
+const monthlyData = {{ monthly_data|safe }};
+const offerLabels = {{ offer_labels|safe }};
+const offerData = {{ offer_data|safe }};
 
-// Status pie
 new Chart(document.getElementById('statusChart'), {
     type: 'pie',
     data: {
         labels: statusLabels,
         datasets: [{
             data: statusData,
-            backgroundColor: ['#6c757d','#0dcaf0','#ffc107','#198754','#dc3545'],
+            backgroundColor: ['#64748b', '#0891b2', '#d97706', '#0f9f6e', '#dc2626'],
         }]
     },
     options: { plugins: { legend: { position: 'bottom' } } }
 });
 
-// Monthly bar
 new Chart(document.getElementById('monthlyChart'), {
     type: 'bar',
     data: {
@@ -182,8 +186,8 @@ new Chart(document.getElementById('monthlyChart'), {
         datasets: [{
             label: 'Applications',
             data: monthlyData,
-            backgroundColor: 'rgba(13,110,253,0.7)',
-            borderRadius: 4,
+            backgroundColor: 'rgba(37, 99, 235, 0.72)',
+            borderRadius: 6,
         }]
     },
     options: {
@@ -192,14 +196,13 @@ new Chart(document.getElementById('monthlyChart'), {
     }
 });
 
-// Offer doughnut
 new Chart(document.getElementById('offerChart'), {
     type: 'doughnut',
     data: {
         labels: offerLabels,
         datasets: [{
             data: offerData,
-            backgroundColor: ['#198754','#dee2e6'],
+            backgroundColor: ['#0f9f6e', '#dfe6f1'],
         }]
     },
     options: { plugins: { legend: { position: 'bottom' } } }

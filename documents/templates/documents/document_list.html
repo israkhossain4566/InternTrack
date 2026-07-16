@@ -3,50 +3,60 @@
 {% block title %}My Documents{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>My Documents</h2>
-        <a class="btn btn-primary" href="{% url 'documents:document_upload' %}">Upload Document</a>
+<div>
+    <div class="page-heading">
+        <div>
+            <div class="page-kicker">Library</div>
+            <h1 class="page-title">My Documents</h1>
+            <p class="page-subtitle">Manage resumes, cover letters, and files for your internship search.</p>
+        </div>
+        <a class="btn btn-primary" href="{% url 'documents:document_upload' %}">
+            <i class="bi bi-cloud-arrow-up me-1"></i>Upload Document
+        </a>
     </div>
 
     {% if documents %}
-    <table class="table table-bordered table-hover align-middle">
-        <thead class="table-dark">
-            <tr>
-                <th>Title</th>
-                <th>Type</th>
-                <th>Uploaded</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for document in documents %}
-            <tr>
-                <td>
-                    {{ document.title }}
-                    {% if document.document_type == "resume" %}
-                        <span class="badge bg-secondary">V{{ document.version }}</span>
-                        {% if latest_resume and document.pk == latest_resume.pk %}
-                            <span class="badge bg-success">Latest</span>
-                        {% endif %}
-                    {% endif %}
-                </td>
-                <td>{{ document.get_document_type_display }}</td>
-                <td>{{ document.uploaded_at|date:"M j, Y, g:i A" }}</td>
-                <td>
-                    <a class="btn btn-sm btn-info" href="{% url 'documents:document_detail' document.pk %}">View</a>
-                    <a class="btn btn-sm btn-warning" href="{% url 'documents:document_edit' document.pk %}">Edit</a>
-                    <a class="btn btn-sm btn-success" href="{{ document.file.url }}" target="_blank" rel="noopener">Download</a>
-                    <a class="btn btn-sm btn-danger" href="{% url 'documents:document_delete' document.pk %}">Delete</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-shell">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Uploaded</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for document in documents %}
+                    <tr>
+                        <td class="fw-semibold">
+                            <i class="bi bi-file-earmark-text text-primary me-2"></i>{{ document.title }}
+                            {% if document.document_type == "resume" %}
+                                <span class="badge bg-secondary ms-1">V{{ document.version }}</span>
+                                {% if latest_resume and document.pk == latest_resume.pk %}
+                                    <span class="badge bg-success ms-1">Latest</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>{{ document.get_document_type_display }}</td>
+                        <td>{{ document.uploaded_at|date:"M j, Y, g:i A" }}</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'documents:document_detail' document.pk %}" title="View"><i class="bi bi-eye"></i></a>
+                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'documents:document_edit' document.pk %}" title="Edit"><i class="bi bi-pencil"></i></a>
+                            <a class="btn btn-sm btn-outline-success" href="{{ document.file.url }}" target="_blank" rel="noopener" title="Download"><i class="bi bi-download"></i></a>
+                            <a class="btn btn-sm btn-outline-danger" href="{% url 'documents:document_delete' document.pk %}" title="Delete"><i class="bi bi-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
     {% else %}
-    <div class="text-center border rounded bg-light p-5">
+    <div class="empty-state">
         <i class="bi bi-file-earmark-text display-4 text-secondary"></i>
-        <h3 class="h5 mt-3">No documents uploaded yet.</h3>
+        <h2 class="h5 mt-3">No documents uploaded yet.</h2>
         <a class="btn btn-primary mt-2" href="{% url 'documents:document_upload' %}">Upload Your First Document</a>
     </div>
     {% endif %}

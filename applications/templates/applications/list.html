@@ -1,13 +1,19 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>My Applications</h2>
-        <a href="{% url 'application_add' %}" class="btn btn-primary">+ Add Application</a>
+<div>
+    <div class="page-heading">
+        <div>
+            <div class="page-kicker">Pipeline</div>
+            <h1 class="page-title">My Applications</h1>
+            <p class="page-subtitle">Search, filter, and sort your internship opportunities.</p>
+        </div>
+        <a href="{% url 'application_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Add Application
+        </a>
     </div>
 
-    <form method="get" action="{% url 'application_list' %}" class="card card-body mb-3" id="application-search-form">
+    <form method="get" action="{% url 'application_list' %}" class="toolbar-card card-body mb-4" id="application-search-form">
         <div class="row g-3 align-items-end">
             <div class="col-md-4">
                 <label for="application-search" class="form-label">Search applications</label>
@@ -84,7 +90,9 @@
                 </select>
             </div>
             <div class="col-md-6 d-flex gap-2">
-                <button type="submit" class="btn btn-outline-primary">Apply</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel me-1"></i>Apply
+                </button>
                 <a
                     href="{% url 'application_list' %}"
                     id="application-clear"
