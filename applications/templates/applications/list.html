@@ -67,6 +67,22 @@
                     value="{{ date_applied_filter }}"
                 >
             </div>
+            <div class="col-md-3">
+                <label for="sort-filter" class="form-label">Sort By</label>
+                <select id="sort-filter" name="sort" class="form-select">
+                    <option value="">Default order</option>
+                    {% for value, label in sort_options %}
+                        <option value="{{ value }}" {% if sort_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="direction-filter" class="form-label">Direction</label>
+                <select id="direction-filter" name="direction" class="form-select">
+                    <option value="asc" {% if direction_filter == 'asc' %}selected{% endif %}>Ascending</option>
+                    <option value="desc" {% if direction_filter == 'desc' %}selected{% endif %}>Descending</option>
+                </select>
+            </div>
             <div class="col-md-6 d-flex gap-2">
                 <button type="submit" class="btn btn-outline-primary">Apply</button>
                 <a
@@ -101,6 +117,10 @@
     function buildUrl() {
         const params = new URLSearchParams(new FormData(form));
 
+        if (!params.get('sort')) {
+            params.delete('direction');
+        }
+
         for (const key of Array.from(params.keys())) {
             const value = params.get(key);
             if (!value || !value.trim()) {
@@ -117,9 +137,11 @@
             return;
         }
 
-        const hasActiveInput = Array.from(new FormData(form).values()).some(
-            value => String(value).trim() !== ''
-        );
+        const params = new URLSearchParams(new FormData(form));
+        if (!params.get('sort')) {
+            params.delete('direction');
+        }
+        const hasActiveInput = Array.from(params.values()).some(value => String(value).trim() !== '');
         clearButton.classList.toggle('d-none', !hasActiveInput);
     }
 
