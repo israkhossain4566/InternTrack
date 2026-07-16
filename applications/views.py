@@ -1,12 +1,13 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.dateparse import parse_date
 from django.views.generic import DetailView, ListView
 
-from .models import Company, JobApplication
-from .forms import JobApplicationForm, CompanyForm
+from .forms import JobApplicationForm
+from .models import JobApplication
+
 
 class ApplicationListView(LoginRequiredMixin, ListView):
     model = JobApplication
@@ -120,6 +121,7 @@ class ApplicationListView(LoginRequiredMixin, ListView):
             response.set_cookie('most_searched_company', self.search_query, max_age=86400 * 30)
         return response
 
+
 @login_required
 def application_add(request):
     if request.method == 'POST':
@@ -128,27 +130,27 @@ def application_add(request):
             app = form.save(commit=False)
             app.user = request.user
             app.save()
+            trigger_notifications(app)
             return redirect('application_list')
     else:
         form = JobApplicationForm()
     return render(request, 'applications/form.html', {'form': form, 'action': 'Add'})
 
+
 @login_required
 def application_edit(request, pk):
     app = get_object_or_404(JobApplication, pk=pk, user=request.user)
-    old_status = app.status
-    old_deadline = app.deadline
-    old_interview = app.interview_date
 
     if request.method == 'POST':
         form = JobApplicationForm(request.POST, instance=app)
         if form.is_valid():
             updated = form.save()
-            trigger_notifications(request.user, updated, old_status, old_deadline, old_interview)
+            trigger_notifications(updated)
             return redirect('application_list')
     else:
         form = JobApplicationForm(instance=app)
     return render(request, 'applications/form.html', {'form': form, 'action': 'Edit'})
+
 
 @login_required
 def application_delete(request, pk):
@@ -157,6 +159,7 @@ def application_delete(request, pk):
         app.delete()
         return redirect('application_list')
     return render(request, 'applications/confirm_delete.html', {'app': app})
+
 
 class ApplicationDetailView(LoginRequiredMixin, DetailView):
     model = JobApplication
@@ -179,29 +182,11 @@ class ApplicationDetailView(LoginRequiredMixin, DetailView):
 application_list = ApplicationListView.as_view()
 application_detail = ApplicationDetailView.as_view()
 
-def trigger_notifications(user, app, old_status, old_deadline, old_interview):
-    # Import here to avoid circular import
-    # Jaimil's Notification model lives in the dashboard app
-    try:
-        from dashboard.models import Notification
-    except ImportError:
-        return  # Dashboard not ready yet — skip silently
 
-    if app.status != old_status:
-        Notification.objects.create(
-            user=user,
-            message=f'Application for {app.job_title} at {app.company_name} changed to {app.status}.',
-            type='status'
-        )
-    if app.interview_date and app.interview_date != old_interview:
-        Notification.objects.create(
-            user=user,
-            message=f'Interview date updated for {app.job_title} at {app.company_name}: {app.interview_date}.',
-            type='interview'
-        )
-    if app.deadline and app.deadline != old_deadline:
-        Notification.objects.create(
-            user=user,
-            message=f'Deadline updated for {app.job_title} at {app.company_name}: {app.deadline}.',
-            type='deadline'
-        )
+def trigger_notifications(app):
+    try:
+        from dashboard.services import sync_application_follow_up
+    except ImportError:
+        return
+
+    sync_application_follow_up(app)

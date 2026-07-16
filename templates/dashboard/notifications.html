@@ -1,29 +1,89 @@
 {% extends "base.html" %}
 
-{% block title %}Notifications – InternTrack{% endblock %}
+{% block title %}Follow-up Reminders - InternTrack{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">
-        Notifications
-        {% if unread_count %}
-            <span class="badge bg-danger ms-2">{{ unread_count }} unread</span>
-        {% endif %}
-    </h1>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">{% if show_history %}Notification History{% else %}Actionable Notifications{% endif %}</h1>
+        <p class="text-muted mb-0">
+            {% if show_history %}
+                Review notifications that have already been handled.
+            {% else %}
+                Track unread reminders and application follow-ups that still need attention.
+            {% endif %}
+        </p>
+    </div>
     <div class="d-flex gap-2">
-        {% if unread_count %}
+        {% if show_history %}
+        <a href="{% url 'dashboard:notification_list' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-list-check me-1"></i>Actionable
+        </a>
+        {% elif history_count %}
+        <a href="{% url 'dashboard:notification_list' %}?show=history" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-clock-history me-1"></i>History
+        </a>
+        {% endif %}
+        {% if unread_general_count %}
         <form method="post" action="{% url 'dashboard:notification_mark_all_read' %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-outline-primary btn-sm">
-                ✔ Mark All as Read
+                <i class="bi bi-check2-all me-1"></i>Mark Other Notifications Read
             </button>
         </form>
         {% endif %}
         <a href="{% url 'dashboard:dashboard_home' %}" class="btn btn-outline-secondary btn-sm">
-            ← Back to Dashboard
+            <i class="bi bi-arrow-left me-1"></i>Dashboard
         </a>
     </div>
 </div>
+
+{% if overdue_follow_ups and not show_history %}
+<section class="mb-4">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">Needs Follow-up</h2>
+        <span class="badge bg-danger">{{ overdue_follow_ups|length }}</span>
+    </div>
+    <div class="list-group shadow-sm">
+        {% for notif in overdue_follow_ups %}
+        <div class="list-group-item">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div>
+                    <div class="fw-semibold">{{ notif.message }}</div>
+                    {% if notif.application %}
+                    <div class="small text-muted mt-1">
+                        Status: {{ notif.application.status }}
+                        {% if notif.application.follow_up_due_date %}
+                            <span class="mx-1">|</span>Due {{ notif.application.follow_up_due_date|date:"M d, Y" }}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    {% if notif.application %}
+                    <a href="{% url 'application_detail' notif.application.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Open
+                    </a>
+                    {% endif %}
+                    <form method="post" action="{% url 'dashboard:notification_follow_up_done' notif.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="bi bi-check2 me-1"></i>Followed Up
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'dashboard:notification_follow_up_snooze' notif.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-clock me-1"></i>Snooze 7 Days
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
 
 {% if notifications %}
 <div class="table-responsive">
@@ -42,15 +102,15 @@
             <tr class="{% if not notif.is_read %}table-light fw-semibold{% endif %}">
                 <td class="text-center">
                     {% if not notif.is_read %}
-                        <span class="badge bg-danger">●</span>
+                        <span class="badge bg-danger">New</span>
                     {% else %}
-                        <span class="text-muted">○</span>
+                        <i class="bi bi-check-circle text-muted"></i>
                     {% endif %}
                 </td>
                 <td>{{ notif.message }}</td>
                 <td>
-                    {% if notif.type == 'status' %}
-                        <span class="badge bg-info text-dark">Status</span>
+                    {% if notif.type == 'follow_up' %}
+                        <span class="badge bg-primary">Follow-up</span>
                     {% elif notif.type == 'interview' %}
                         <span class="badge bg-warning text-dark">Interview</span>
                     {% elif notif.type == 'deadline' %}
@@ -61,19 +121,28 @@
                 </td>
                 <td class="text-nowrap">{{ notif.created_at|date:"M d, Y H:i" }}</td>
                 <td class="text-nowrap">
-                    {% if not notif.is_read %}
+                    {% if notif.type == 'follow_up' and notif.application and not notif.is_read %}
+                    <form method="post"
+                          action="{% url 'dashboard:notification_follow_up_done' notif.pk %}"
+                          class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-primary me-1">
+                            <i class="bi bi-check2 me-1"></i>Done
+                        </button>
+                    </form>
+                    {% elif not notif.is_read %}
                     <a href="{% url 'dashboard:notification_mark_read' notif.pk %}"
                        class="btn btn-sm btn-outline-success me-1">
-                        ✔ Read
+                        <i class="bi bi-check2 me-1"></i>Read
                     </a>
                     {% endif %}
                     <form method="post"
                           action="{% url 'dashboard:notification_delete' notif.pk %}"
-                          style="display:inline;"
+                          class="d-inline"
                           onsubmit="return confirm('Delete this notification?');">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-outline-danger">
-                            🗑 Delete
+                            <i class="bi bi-trash me-1"></i>Delete
                         </button>
                     </form>
                 </td>
@@ -83,6 +152,12 @@
     </table>
 </div>
 {% else %}
-<div class="alert alert-info">You have no notifications.</div>
+<div class="alert alert-info">
+    {% if show_history %}
+        There are no handled notifications in your history.
+    {% else %}
+        You have no actionable notifications.
+    {% endif %}
+</div>
 {% endif %}
 {% endblock %}

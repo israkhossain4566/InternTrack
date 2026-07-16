@@ -11,6 +11,12 @@ from django.utils import timezone
 from applications.models import JobApplication
 from documents.models import UploadedDocument
 from .models import Notification
+from .services import (
+    FOLLOW_UP_TYPE,
+    complete_follow_up,
+    create_due_follow_up_notifications,
+    snooze_follow_up,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -138,10 +144,18 @@ def track_recently_viewed(request, pk):
 
 @login_required
 def notification_list(request):
-    notifications = Notification.objects.filter(user=request.user)
+    create_due_follow_up_notifications(request.user)
+    show_history = request.GET.get('show') == 'history'
+    all_notifications = Notification.objects.filter(user=request.user)
+    notifications = all_notifications if show_history else all_notifications.filter(is_read=False)
+    overdue_follow_ups = all_notifications.filter(type=FOLLOW_UP_TYPE, is_read=False)
     return render(request, 'dashboard/notifications.html', {
         'notifications': notifications,
-        'unread_count': notifications.filter(is_read=False).count(),
+        'overdue_follow_ups': overdue_follow_ups,
+        'show_history': show_history,
+        'unread_count': all_notifications.filter(is_read=False).count(),
+        'unread_general_count': all_notifications.exclude(type=FOLLOW_UP_TYPE).filter(is_read=False).count(),
+        'history_count': all_notifications.filter(is_read=True).count(),
     })
 
 
@@ -155,7 +169,8 @@ def notification_mark_read(request, pk):
 
 @login_required
 def notification_mark_all_read(request):
-    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    create_due_follow_up_notifications(request.user)
+    Notification.objects.filter(user=request.user, is_read=False).exclude(type=FOLLOW_UP_TYPE).update(is_read=True)
     return redirect('dashboard:notification_list')
 
 
@@ -167,6 +182,32 @@ def notification_delete(request, pk):
     return redirect('dashboard:notification_list')
 
 
+@login_required
+def notification_follow_up_done(request, pk):
+    notification = get_object_or_404(
+        Notification,
+        pk=pk,
+        user=request.user,
+        type=FOLLOW_UP_TYPE,
+    )
+    if request.method == 'POST':
+        complete_follow_up(notification)
+    return redirect('dashboard:notification_list')
+
+
+@login_required
+def notification_follow_up_snooze(request, pk):
+    notification = get_object_or_404(
+        Notification,
+        pk=pk,
+        user=request.user,
+        type=FOLLOW_UP_TYPE,
+    )
+    if request.method == 'POST':
+        snooze_follow_up(notification)
+    return redirect('dashboard:notification_list')
+
+
 # ---------------------------------------------------------------------------
 # Admin Statistics
 # ---------------------------------------------------------------------------
@@ -174,7 +215,8 @@ def notification_delete(request, pk):
 @login_required
 def notifications_api(request):
     """JSON endpoint for the navbar bell dropdown."""
-    notifications = Notification.objects.filter(user=request.user)[:10]
+    create_due_follow_up_notifications(request.user)
+    notifications = Notification.objects.filter(user=request.user, is_read=False)[:10]
     unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
     data = {
         'unread_count': unread_count,
