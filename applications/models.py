@@ -33,5 +33,3 @@ class JobApplication(models.Model):
 
     def __str__(self):
         return f"{self.job_title} at {self.company_name}"
-    def __str__(self):
-        return f"{self.job_title} at {self.company.name}"
