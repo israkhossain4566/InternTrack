@@ -6,6 +6,7 @@
             <th>Job Title</th>
             <th>Location</th>
             <th>Status</th>
+            <th>Application Date</th>
             <th>Deadline</th>
             <th>Actions</th>
         </tr>
@@ -29,6 +30,7 @@
                     <span class="badge bg-secondary">{{ app.status }}</span>
                 {% endif %}
             </td>
+            <td>{{ app.application_date }}</td>
             <td>{{ app.deadline|default:"N/A" }}</td>
             <td>
                 <a href="{% url 'application_detail' app.pk %}" class="btn btn-sm btn-info">View</a>

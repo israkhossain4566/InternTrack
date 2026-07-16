@@ -16,6 +16,8 @@ def application_list(request):
     internship_type_filter = request.GET.get('internship_type', '').strip()
     deadline_filter = request.GET.get('deadline', '').strip()
     date_applied_filter = request.GET.get('date_applied', '').strip()
+    sort_filter = request.GET.get('sort', '').strip()
+    direction_filter = request.GET.get('direction', 'asc').strip()
 
     if search_query:
         applications = applications.filter(
@@ -56,10 +58,26 @@ def application_list(request):
         deadline_filter,
         date_applied_filter,
     ])
+    sort_options = [
+        ('company_name', 'Company'),
+        ('status', 'Status'),
+        ('deadline', 'Deadline'),
+        ('application_date', 'Application Date'),
+    ]
+    sort_fields = {value: value for value, label in sort_options}
+    sort_field = sort_fields.get(sort_filter)
+    sort_direction = 'desc' if direction_filter == 'desc' else 'asc'
+
+    if sort_field:
+        order_field = f'-{sort_field}' if sort_direction == 'desc' else sort_field
+        applications = applications.order_by(order_field, 'id')
+    else:
+        applications = applications.order_by('id')
+
     query_params = request.GET.copy()
     query_params.pop('page', None)
     query_string = query_params.urlencode()
-    paginator = Paginator(applications.order_by('id'), 10)
+    paginator = Paginator(applications, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
 
     context = {
@@ -75,8 +93,11 @@ def application_list(request):
         'internship_type_filter': internship_type_filter,
         'deadline_filter': deadline_filter,
         'date_applied_filter': date_applied_filter,
+        'sort_options': sort_options,
+        'sort_filter': sort_filter,
+        'direction_filter': sort_direction,
         'filters_active': filters_active,
-        'search_or_filters_active': bool(search_query or filters_active),
+        'search_or_filters_active': bool(search_query or filters_active or sort_field),
     }
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
