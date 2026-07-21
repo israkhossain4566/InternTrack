@@ -1,16 +1,25 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from applications.models import JobApplication
+from .emails import send_notification_email
 from .models import Notification
 from .services import (
     FOLLOW_UP_TYPE,
+    INTERVIEW_TYPE,
+    NEW_APPLICATION_TYPE,
+    STATUS_CHANGE_TYPE,
     complete_follow_up,
     create_due_follow_up_notifications,
+    create_interview_update_notification,
+    create_new_application_notification,
+    create_status_change_notification,
     snooze_follow_up,
     sync_application_follow_up,
 )
@@ -142,3 +151,124 @@ class NotificationVisibilityTests(TestCase):
         messages = [item['message'] for item in response.json()['notifications']]
 
         self.assertEqual(messages, ['Needs attention'])
+
+
+class NotificationEmailTests(TestCase):
+    """Covers Jaimil's notification-email-delivery scope.
+
+    Uses Django's locmem test email backend (the default under TestCase),
+    so these assert against django.core.mail.outbox instead of hitting a
+    real SMTP server.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='student',
+            password='pass',
+            email='student@example.com',
+        )
+
+    def make_application(self, **overrides):
+        data = {
+            'user': self.user,
+            'company_name': 'Acme',
+            'job_title': 'Software Intern',
+            'status': 'Applied',
+        }
+        data.update(overrides)
+        return JobApplication.objects.create(**data)
+
+    def test_send_notification_email_delivers_to_user_address(self):
+        notification = Notification.objects.create(
+            user=self.user,
+            message='New application added: Software Intern at Acme.',
+            type=NEW_APPLICATION_TYPE,
+        )
+
+        sent = send_notification_email(self.user, notification)
+
+        self.assertTrue(sent)
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertEqual(email.to, ['student@example.com'])
+        self.assertIn('New Application Added', email.subject)
+        self.assertIn(notification.message, email.body)
+
+    def test_send_notification_email_skipped_when_user_has_no_email(self):
+        user_without_email = User.objects.create_user(username='noemail', password='pass')
+        notification = Notification.objects.create(
+            user=user_without_email,
+            message='Some update',
+            type=NEW_APPLICATION_TYPE,
+        )
+
+        sent = send_notification_email(user_without_email, notification)
+
+        self.assertFalse(sent)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_new_application_notification_sends_email(self):
+        application = self.make_application()
+
+        create_new_application_notification(application)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('New Application Added', mail.outbox[0].subject)
+
+    def test_status_change_notification_sends_email(self):
+        application = self.make_application(status='Interview')
+
+        create_status_change_notification(application, previous_status='Applied')
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('Application Status Update', mail.outbox[0].subject)
+
+    def test_interview_notification_sends_email(self):
+        interview_date = timezone.localdate() + timedelta(days=3)
+        application = self.make_application(
+            status='Interview',
+            interview_date=interview_date,
+        )
+
+        create_interview_update_notification(application, previous_interview_date=None)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('Interview Update', mail.outbox[0].subject)
+
+    def test_due_follow_up_notification_sends_email(self):
+        application = self.make_application(
+            follow_up_due_date=timezone.localdate() - timedelta(days=1),
+        )
+
+        create_due_follow_up_notifications(self.user)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('Follow-up Reminder', mail.outbox[0].subject)
+
+    def test_general_notification_does_not_send_email(self):
+        Notification.objects.create(
+            user=self.user,
+            message='Just an FYI',
+            type='general',
+        )
+
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_notification_still_created_when_email_backend_fails(self):
+        application = self.make_application()
+
+        with patch('dashboard.services.send_notification_email', side_effect=RuntimeError('SMTP down')):
+            notification = create_new_application_notification(application)
+
+        self.assertIsNotNone(notification)
+        self.assertTrue(Notification.objects.filter(pk=notification.pk).exists())
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_repeated_edit_without_status_change_sends_no_extra_email(self):
+        application = self.make_application(status='Applied')
+        mail.outbox.clear()
+
+        result = create_status_change_notification(application, previous_status='Applied')
+
+        self.assertIsNone(result)
+        self.assertEqual(len(mail.outbox), 0)
