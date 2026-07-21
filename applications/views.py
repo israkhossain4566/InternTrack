@@ -130,7 +130,7 @@ def application_add(request):
             app = form.save(commit=False)
             app.user = request.user
             app.save()
-            trigger_notifications(app)
+            trigger_notifications(app, is_new=True)
             return redirect('application_list')
     else:
         form = JobApplicationForm()
@@ -142,10 +142,21 @@ def application_edit(request, pk):
     app = get_object_or_404(JobApplication, pk=pk, user=request.user)
 
     if request.method == 'POST':
+        # Snapshot the fields we need to diff *before* the form overwrites them,
+        # so we can tell whether status/interview_date actually changed and
+        # avoid firing duplicate notifications on no-op edits.
+        previous_status = app.status
+        previous_interview_date = app.interview_date
+
         form = JobApplicationForm(request.POST, instance=app)
         if form.is_valid():
             updated = form.save()
-            trigger_notifications(updated)
+            trigger_notifications(
+                updated,
+                is_new=False,
+                previous_status=previous_status,
+                previous_interview_date=previous_interview_date,
+            )
             return redirect('application_list')
     else:
         form = JobApplicationForm(instance=app)
@@ -183,10 +194,35 @@ application_list = ApplicationListView.as_view()
 application_detail = ApplicationDetailView.as_view()
 
 
-def trigger_notifications(app):
+def trigger_notifications(app, is_new=False, previous_status=None, previous_interview_date=None):
+    """Create/update notifications for an application add or edit.
+
+    - Always resyncs the follow-up reminder schedule (existing behavior).
+    - On add: creates a one-time 'new_application' notification.
+    - On edit: creates a 'status_change' notification only if status actually
+      changed, and an 'interview' notification only if the interview date
+      actually changed while the application is in 'Interview' status.
+
+    Each helper below has its own dedup guard, so calling this multiple times
+    for the same edit (e.g. a form resubmit) will not create duplicates.
+    """
     try:
-        from dashboard.services import sync_application_follow_up
+        from dashboard.services import (
+            create_interview_update_notification,
+            create_new_application_notification,
+            create_status_change_notification,
+            sync_application_follow_up,
+        )
     except ImportError:
         return
 
     sync_application_follow_up(app)
+
+    if is_new:
+        create_new_application_notification(app)
+        return
+
+    if previous_status is not None:
+        create_status_change_notification(app, previous_status)
+
+    create_interview_update_notification(app, previous_interview_date)
