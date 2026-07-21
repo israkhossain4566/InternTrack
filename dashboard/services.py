@@ -1,16 +1,53 @@
+import logging
 from datetime import timedelta
 
 from django.db import transaction
 from django.utils import timezone
 
 from applications.models import JobApplication
+from .emails import send_notification_email
 from .models import Notification
+
+logger = logging.getLogger(__name__)
 
 
 FOLLOW_UP_TYPE = 'follow_up'
 NEW_APPLICATION_TYPE = 'new_application'
 STATUS_CHANGE_TYPE = 'status_change'
 INTERVIEW_TYPE = 'interview'
+
+# Notification types that are also emailed to the user, per the task brief.
+# 'deadline' and 'general' are left out for now: nothing currently creates
+# 'deadline'-typed notifications, and 'general' is a catch-all that isn't
+# necessarily worth an inbox interruption.
+EMAIL_WORTHY_TYPES = {
+    NEW_APPLICATION_TYPE,
+    STATUS_CHANGE_TYPE,
+    INTERVIEW_TYPE,
+    FOLLOW_UP_TYPE,
+}
+
+
+def _create_and_maybe_email(**kwargs):
+    """Create a Notification and, if its type is email-worthy, email it.
+
+    This is the single hook-in point for notification creation used by every
+    function below. Email failures are caught and logged here so they can
+    never break the in-app notification (or whatever user action triggered
+    it) -- the Notification row is always committed first.
+    """
+    notification = Notification.objects.create(**kwargs)
+
+    if notification.type in EMAIL_WORTHY_TYPES:
+        try:
+            send_notification_email(notification.user, notification)
+        except Exception:
+            logger.exception(
+                "Failed to send notification email for notification id=%s",
+                notification.pk,
+            )
+
+    return notification
 
 
 def follow_up_message(application):
@@ -39,7 +76,7 @@ def create_new_application_notification(application):
         return None
 
     role = f"{application.job_title} at {application.company_name}"
-    return Notification.objects.create(
+    return _create_and_maybe_email(
         user=application.user,
         application=application,
         message=f"New application added: {role}.",
@@ -58,7 +95,7 @@ def create_status_change_notification(application, previous_status):
         return None
 
     role = f"{application.job_title} at {application.company_name}"
-    return Notification.objects.create(
+    return _create_and_maybe_email(
         user=application.user,
         application=application,
         message=f"Status update for {role}: {previous_status} -> {application.status}.",
@@ -92,7 +129,7 @@ def create_interview_update_notification(application, previous_interview_date):
             f"{application.interview_date.strftime('%b %d, %Y')}."
         )
 
-    return Notification.objects.create(
+    return _create_and_maybe_email(
         user=application.user,
         application=application,
         message=message,
@@ -149,7 +186,7 @@ def create_due_follow_up_notifications(user):
             if already_unread:
                 continue
 
-            Notification.objects.create(
+            _create_and_maybe_email(
                 user=user,
                 application=application,
                 message=follow_up_message(application),
