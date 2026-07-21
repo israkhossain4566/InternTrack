@@ -1,4 +1,5 @@
 :root {
+    --it-font-sans: "Manrope", "Segoe UI", sans-serif;
     --it-bg: #eef4f8;
     --it-surface: rgba(255, 255, 255, 0.82);
     --it-surface-strong: #ffffff;
@@ -22,7 +23,20 @@ body.app-shell {
         linear-gradient(225deg, rgba(18, 167, 162, 0.14), transparent 32%),
         linear-gradient(180deg, #f7f2ea 0%, #eef4f8 43%, #edf2f7 100%);
     color: var(--it-ink);
+    font-family: var(--it-font-sans);
     min-height: 100vh;
+    text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.navbar-brand,
+.btn {
+    letter-spacing: -0.02em;
 }
 
 .app-navbar {
@@ -127,13 +141,27 @@ body.app-shell {
 
 .page-title {
     color: var(--it-ink);
+    font-size: clamp(1.8rem, 2.6vw, 2.45rem);
     font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
     margin: 0;
 }
 
 .page-subtitle {
     color: var(--it-muted);
+    font-size: 0.98rem;
+    line-height: 1.6;
     margin: 0.4rem 0 0;
+    max-width: 680px;
+}
+
+.page-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    justify-content: flex-end;
 }
 
 .it-card {
@@ -147,8 +175,10 @@ body.app-shell {
 .it-card > .card-body,
 .it-card > .card-header,
 .toolbar-card.card-body {
+    padding-bottom: 1.35rem;
     padding-left: 1.35rem;
     padding-right: 1.35rem;
+    padding-top: 1.35rem;
 }
 
 .card > .card-body,
@@ -248,10 +278,22 @@ form.card {
     font-weight: 700;
 }
 
+.toolbar-actions {
+    margin-top: 0.45rem;
+    padding-bottom: 0.25rem;
+    padding-top: 0.25rem;
+}
+
 .form-control,
 .form-select {
     border-color: #cfd8e6;
     border-radius: 8px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: color-mix(in srgb, var(--it-primary) 72%, white);
+    box-shadow: 0 0 0 0.22rem rgba(47, 111, 237, 0.14);
 }
 
 .btn {
@@ -301,6 +343,120 @@ form.card {
     border-radius: 999px;
     font-weight: 700;
     padding: 0.35rem 0.6rem;
+}
+
+.form-panel,
+.detail-panel,
+.danger-panel {
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(241, 247, 250, 0.84));
+    border: 1px solid var(--it-border);
+    border-radius: 8px;
+    box-shadow: var(--it-shadow);
+}
+
+.form-panel {
+    padding: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.form-panel .form-label {
+    color: var(--it-muted);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.45rem;
+    text-transform: uppercase;
+}
+
+.form-panel .form-text {
+    color: var(--it-muted);
+    margin-top: 0.45rem;
+}
+
+.form-actions {
+    align-items: center;
+    border-top: 1px solid var(--it-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+    padding-top: 1.25rem;
+}
+
+.detail-panel {
+    overflow: hidden;
+}
+
+.detail-hero {
+    align-items: flex-start;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(232, 243, 246, 0.82));
+    border-bottom: 1px solid var(--it-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.detail-grid {
+    display: grid;
+    gap: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detail-item {
+    border-bottom: 1px solid var(--it-border);
+    min-width: 0;
+    padding: 1rem 1.25rem;
+}
+
+.detail-item:nth-child(odd) {
+    border-right: 1px solid var(--it-border);
+}
+
+.detail-item.detail-item-full {
+    border-bottom: 0;
+    border-right: 0;
+    grid-column: 1 / -1;
+}
+
+.detail-label {
+    color: var(--it-muted);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+}
+
+.detail-value {
+    color: var(--it-ink);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.detail-value-muted {
+    color: var(--it-muted);
+    font-weight: 600;
+}
+
+.danger-panel {
+    margin-inline: auto;
+    max-width: 760px;
+    overflow: hidden;
+}
+
+.danger-panel-header {
+    background:
+        linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(255, 255, 255, 0.86));
+    border-bottom: 1px solid rgba(220, 38, 38, 0.18);
+    padding: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.danger-panel-body {
+    padding: clamp(1.25rem, 2.5vw, 2rem);
 }
 
 .quick-card {
@@ -364,6 +520,41 @@ form.card {
     .page-heading {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .page-actions {
+        justify-content: flex-start;
+    }
+
+    .page-actions .btn,
+    .page-actions form {
+        width: 100%;
+    }
+
+    .page-actions form .btn {
+        width: 100%;
+    }
+
+    .form-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-item,
+    .detail-item:nth-child(odd) {
+        border-right: 0;
+    }
+
+    .detail-item:nth-last-child(2) {
+        border-bottom: 1px solid var(--it-border);
     }
 
     .landing-panel {
