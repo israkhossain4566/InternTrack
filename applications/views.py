@@ -198,10 +198,18 @@ def trigger_notifications(app, is_new=False, previous_status=None, previous_inte
     """Create/update notifications for an application add or edit.
 
     - Always resyncs the follow-up reminder schedule (existing behavior).
-    - On add: creates a one-time 'new_application' notification.
-    - On edit: creates a 'status_change' notification only if status actually
-      changed, and an 'interview' notification only if the interview date
-      actually changed while the application is in 'Interview' status.
+    - Creates an 'interview' notification only if the interview date actually
+      changed while the application is in 'Interview' status.
+
+    'new_application' and 'status_change' notifications are intentionally
+    NOT created here: they fired for edits the user just made themselves,
+    which felt like noise (you don't need to be notified about your own
+    action). Follow-up and interview reminders stay, since those surface
+    something the user asked to be reminded about later, not something they
+    just did. The underlying create_new_application_notification() and
+    create_status_change_notification() helpers are left in
+    dashboard/services.py, unused, in case this needs to be reintroduced
+    (e.g. behind a user preference) later.
 
     Each helper below has its own dedup guard, so calling this multiple times
     for the same edit (e.g. a form resubmit) will not create duplicates.
@@ -209,8 +217,6 @@ def trigger_notifications(app, is_new=False, previous_status=None, previous_inte
     try:
         from dashboard.services import (
             create_interview_update_notification,
-            create_new_application_notification,
-            create_status_change_notification,
             sync_application_follow_up,
         )
     except ImportError:
@@ -219,10 +225,6 @@ def trigger_notifications(app, is_new=False, previous_status=None, previous_inte
     sync_application_follow_up(app)
 
     if is_new:
-        create_new_application_notification(app)
         return
-
-    if previous_status is not None:
-        create_status_change_notification(app, previous_status)
 
     create_interview_update_notification(app, previous_interview_date)
