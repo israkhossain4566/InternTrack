@@ -10,48 +10,52 @@
         <p class="page-subtitle">High-level counts for users, companies, applications, and uploaded documents.</p>
     </div>
     <div class="page-actions">
-        <a href="{% url 'dashboard:dashboard_home' %}" class="btn btn-outline-secondary btn-sm">
-            &larr; Back to Dashboard
+        <a href="{% url 'dashboard:dashboard_home' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+        <a href="/admin/" class="btn btn-dark">
+            <i class="bi bi-shield-lock me-1"></i>Django Admin
         </a>
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-sm-6 col-lg-3">
-        <div class="card text-center border-0 shadow-sm h-100">
-            <div class="card-body py-4">
-                <div class="display-4 fw-bold text-primary">{{ total_users }}</div>
-                <div class="mt-2 text-muted">Total Users</div>
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card it-card h-100" style="--metric-color: #2563eb;">
+            <div class="card-body">
+                <span class="metric-icon mb-3"><i class="bi bi-people"></i></span>
+                <div class="metric-value">{{ total_users }}</div>
+                <div class="metric-label">Total Users</div>
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-lg-3">
-        <div class="card text-center border-0 shadow-sm h-100">
-            <div class="card-body py-4">
-                <div class="display-4 fw-bold text-info">{{ total_companies }}</div>
-                <div class="mt-2 text-muted">Total Companies</div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card it-card h-100" style="--metric-color: #0891b2;">
+            <div class="card-body">
+                <span class="metric-icon mb-3"><i class="bi bi-buildings"></i></span>
+                <div class="metric-value">{{ total_companies }}</div>
+                <div class="metric-label">Total Companies</div>
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-lg-3">
-        <div class="card text-center border-0 shadow-sm h-100">
-            <div class="card-body py-4">
-                <div class="display-4 fw-bold text-success">{{ total_applications }}</div>
-                <div class="mt-2 text-muted">Total Applications</div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card it-card h-100" style="--metric-color: #0f9f6e;">
+            <div class="card-body">
+                <span class="metric-icon mb-3"><i class="bi bi-kanban"></i></span>
+                <div class="metric-value">{{ total_applications }}</div>
+                <div class="metric-label">Total Applications</div>
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-lg-3">
-        <div class="card text-center border-0 shadow-sm h-100">
-            <div class="card-body py-4">
-                <div class="display-4 fw-bold text-warning">{{ total_documents }}</div>
-                <div class="mt-2 text-muted">Total Documents</div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card it-card h-100" style="--metric-color: #c87915;">
+            <div class="card-body">
+                <span class="metric-icon mb-3"><i class="bi bi-file-earmark-text"></i></span>
+                <div class="metric-value">{{ total_documents }}</div>
+                <div class="metric-label">Total Documents</div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="mt-4">
-    <a href="/admin/" class="btn btn-dark btn-sm">Open Django Admin Panel</a>
-</div>
 {% endblock %}

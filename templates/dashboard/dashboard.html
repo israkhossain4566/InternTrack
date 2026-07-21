@@ -10,9 +10,11 @@
         <p class="page-subtitle">A snapshot of your internship search activity, outcomes, and browsing history.</p>
     </div>
     {% if user.is_staff %}
-    <a href="{% url 'dashboard:admin_stats' %}" class="btn btn-dark">
-        <i class="bi bi-shield-lock me-1"></i>Admin Stats
-    </a>
+    <div class="page-actions">
+        <a href="{% url 'dashboard:admin_stats' %}" class="btn btn-dark">
+            <i class="bi bi-shield-lock me-1"></i>Admin Stats
+        </a>
+    </div>
     {% endif %}
 </div>
 
@@ -77,7 +79,7 @@
     <div class="col-md-4">
         <div class="it-card h-100">
             <div class="card-header bg-white border-bottom fw-bold">Status Distribution</div>
-            <div class="card-body d-flex align-items-center justify-content-center">
+            <div class="card-body dashboard-chart-body">
                 <canvas id="statusChart" style="max-height:260px;"></canvas>
             </div>
         </div>
@@ -85,7 +87,7 @@
     <div class="col-md-4">
         <div class="it-card h-100">
             <div class="card-header bg-white border-bottom fw-bold">Monthly Applications</div>
-            <div class="card-body">
+            <div class="card-body dashboard-chart-body">
                 <canvas id="monthlyChart" style="max-height:260px;"></canvas>
             </div>
         </div>
@@ -93,7 +95,7 @@
     <div class="col-md-4">
         <div class="it-card h-100">
             <div class="card-header bg-white border-bottom fw-bold">Offer Ratio</div>
-            <div class="card-body d-flex align-items-center justify-content-center">
+            <div class="card-body dashboard-chart-body">
                 <canvas id="offerChart" style="max-height:260px;"></canvas>
             </div>
         </div>
@@ -105,7 +107,7 @@
         <div class="it-card h-100">
             <div class="card-header bg-white border-bottom fw-bold">Session Info</div>
             <div class="card-body">
-                <dl class="row mb-0">
+                <dl class="row mb-0 dashboard-definition-list">
                     <dt class="col-sm-5">Last Login</dt>
                     <dd class="col-sm-7">
                         {% if last_login %}
@@ -139,7 +141,7 @@
         <div class="it-card h-100">
             <div class="card-header bg-white border-bottom fw-bold">Visit Tracking</div>
             <div class="card-body">
-                <dl class="row mb-0">
+                <dl class="row mb-0 dashboard-definition-list">
                     <dt class="col-sm-6">Today's Visits</dt>
                     <dd class="col-sm-6">
                         <span class="badge bg-primary fs-6">{{ daily_visits }}</span>
