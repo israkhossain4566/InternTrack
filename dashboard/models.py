@@ -7,6 +7,8 @@ class Notification(models.Model):
         ('follow_up', 'Follow-up Reminder'),
         ('interview', 'Interview Update'),
         ('deadline', 'Deadline Update'),
+        ('new_application', 'New Application'),
+        ('status_change', 'Status Change'),
         ('general', 'General'),
     ]
 

@@ -8,6 +8,9 @@ from .models import Notification
 
 
 FOLLOW_UP_TYPE = 'follow_up'
+NEW_APPLICATION_TYPE = 'new_application'
+STATUS_CHANGE_TYPE = 'status_change'
+INTERVIEW_TYPE = 'interview'
 
 
 def follow_up_message(application):
@@ -20,6 +23,81 @@ def follow_up_message(application):
     if application.status == 'Offer':
         return f"Review the offer details and next deadline for {role}."
     return f"Follow up on your application for {role}."
+
+
+def create_new_application_notification(application):
+    """Create a one-time notification when an application is first added.
+
+    Guarded so it can never fire twice for the same application, even if
+    this is accidentally called more than once for the same object.
+    """
+    already_exists = Notification.objects.filter(
+        application=application,
+        type=NEW_APPLICATION_TYPE,
+    ).exists()
+    if already_exists:
+        return None
+
+    role = f"{application.job_title} at {application.company_name}"
+    return Notification.objects.create(
+        user=application.user,
+        application=application,
+        message=f"New application added: {role}.",
+        type=NEW_APPLICATION_TYPE,
+    )
+
+
+def create_status_change_notification(application, previous_status):
+    """Create a notification when an application's status actually changes.
+
+    Callers should only invoke this when previous_status != application.status;
+    that comparison is the dedup guard for repeated edits that don't change
+    status (e.g. re-saving the same form).
+    """
+    if previous_status == application.status:
+        return None
+
+    role = f"{application.job_title} at {application.company_name}"
+    return Notification.objects.create(
+        user=application.user,
+        application=application,
+        message=f"Status update for {role}: {previous_status} -> {application.status}.",
+        type=STATUS_CHANGE_TYPE,
+    )
+
+
+def create_interview_update_notification(application, previous_interview_date):
+    """Create a notification when an interview is newly scheduled or moved.
+
+    Fires only when the application is in (or moving into) 'Interview' status
+    and the interview_date actually changed, so unrelated edits to the same
+    application don't create duplicate interview notifications.
+    """
+    if application.status != 'Interview':
+        return None
+    if application.interview_date is None:
+        return None
+    if previous_interview_date == application.interview_date:
+        return None
+
+    role = f"{application.job_title} at {application.company_name}"
+    if previous_interview_date is None:
+        message = (
+            f"Interview scheduled for {role} on "
+            f"{application.interview_date.strftime('%b %d, %Y')}."
+        )
+    else:
+        message = (
+            f"Interview for {role} moved to "
+            f"{application.interview_date.strftime('%b %d, %Y')}."
+        )
+
+    return Notification.objects.create(
+        user=application.user,
+        application=application,
+        message=message,
+        type=INTERVIEW_TYPE,
+    )
 
 
 def clear_pending_follow_up_notifications(application):
