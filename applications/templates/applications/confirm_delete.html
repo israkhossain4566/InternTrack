@@ -1,13 +1,32 @@
 {% extends "base.html" %}
 
+{% block title %}Delete Application | InternTrack{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>Delete Application</h2>
-    <p>Are you sure you want to delete <strong>{{ app.job_title }}</strong> at <strong>{{ app.company_name }}</strong>?</p>
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Yes, Delete</button>
-        <a href="{% url 'application_list' %}" class="btn btn-secondary">Cancel</a>
-    </form>
+<div class="danger-panel">
+    <div class="danger-panel-header">
+        <div class="page-kicker text-danger">Delete Application</div>
+        <h1 class="page-title">Remove this application?</h1>
+        <p class="page-subtitle">This will permanently delete the application record for this role.</p>
+    </div>
+
+    <div class="danger-panel-body">
+        <p class="mb-4">
+            Are you sure you want to delete
+            <strong>{{ app.job_title }}</strong>
+            at
+            <strong>{{ app.company_name }}</strong>?
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-actions mt-0">
+                <a href="{% url 'application_detail' app.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash me-1"></i>Yes, Delete
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
