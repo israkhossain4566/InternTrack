@@ -3,34 +3,46 @@
 {% block title %}Edit Profile | InternTrack{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center py-4">
-    <div class="col-md-8">
-        <div class="card shadow border-0">
-            <div class="card-header bg-white border-0 pt-4 pb-0">
-                <h4 class="card-title text-primary"><a href="{% url 'profile' %}" class="text-decoration-none">&larr;</a> Edit Profile</h4>
-            </div>
-            <div class="card-body p-4">
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    
-                    {% for field in form %}
-                        <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label text-muted">{{ field.label }}</label>
-                            {{ field.errors }}
-                            {{ field }}
-                            {% if field.help_text %}
-                                <div class="form-text text-muted small">{{ field.help_text|safe }}</div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                    
-                    <div class="d-flex justify-content-end mt-4">
-                        <a href="{% url 'profile' %}" class="btn btn-outline-secondary me-2">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+<div class="page-heading">
+    <div>
+        <div class="page-kicker">Account</div>
+        <h1 class="page-title">Edit Profile</h1>
+        <p class="page-subtitle">Update your student profile details and profile picture.</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Profile
+        </a>
     </div>
 </div>
+
+<form method="post" enctype="multipart/form-data" class="form-panel">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="row g-4">
+        {% for field in form %}
+        <div class="{% if field.name == 'profile_picture' %}col-12{% else %}col-md-6{% endif %}">
+            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+                <div class="form-text text-muted small">{{ field.help_text|safe }}</div>
+            {% endif %}
+            {% if field.errors %}
+                <div class="text-danger small mt-1">{{ field.errors }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="form-actions">
+        <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check2 me-1"></i>Save Changes
+        </button>
+    </div>
+</form>
 {% endblock %}

@@ -3,37 +3,38 @@
 {% block title %}Login | InternTrack{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center py-5">
-    <div class="col-md-6 col-lg-5">
-        <div class="card shadow border-0 rounded-3">
-            <div class="card-body p-5">
-                <h2 class="text-center text-primary mb-4 fw-bold">Welcome Back</h2>
-                <form method="post">
-                    {% csrf_token %}
-                    {% if form.errors %}
-                        <div class="alert alert-danger">
-                            Please correct the errors below.
-                        </div>
-                    {% endif %}
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
-                        <input type="text" name="{{ form.username.html_name }}" id="{{ form.username.id_for_label }}" class="form-control form-control-lg" required autofocus>
-                    </div>
-                    <div class="mb-4">
-                        <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
-                        <input type="password" name="{{ form.password.html_name }}" id="{{ form.password.id_for_label }}" class="form-control form-control-lg" required>
-                    </div>
-                    <div class="d-grid mb-3">
-                        <button type="submit" class="btn btn-primary btn-lg">Log In</button>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <small><a href="{% url 'password_reset' %}" class="text-decoration-none">Forgot Password?</a></small>
-                        <small>New to InternTrack? <a href="{% url 'register' %}" class="text-decoration-none fw-bold">Sign Up</a></small>
-                    </div>
-                </form>
+<div class="auth-shell">
+    <section class="auth-card">
+        <div class="auth-card-body">
+            <div class="text-center">
+                <span class="auth-icon"><i class="bi bi-box-arrow-in-right fs-4"></i></span>
+                <h1 class="auth-title">Welcome Back</h1>
+                <p class="auth-subtitle">Log in to continue tracking applications, documents, and resume matches.</p>
             </div>
+
+            <form method="post">
+                {% csrf_token %}
+                {% if form.errors %}
+                    <div class="alert alert-danger">Please correct the errors below.</div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+                    <input type="text" name="{{ form.username.html_name }}" id="{{ form.username.id_for_label }}" class="form-control form-control-lg" required autofocus>
+                </div>
+                <div class="mb-4">
+                    <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                    <input type="password" name="{{ form.password.html_name }}" id="{{ form.password.id_for_label }}" class="form-control form-control-lg" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100">Log In</button>
+
+                <div class="auth-links">
+                    <small><a href="{% url 'password_reset' %}" class="text-decoration-none">Forgot Password?</a></small>
+                    <small>New to InternTrack? <a href="{% url 'register' %}" class="text-decoration-none fw-bold">Sign Up</a></small>
+                </div>
+            </form>
         </div>
-    </div>
+    </section>
 </div>
 {% endblock %}
