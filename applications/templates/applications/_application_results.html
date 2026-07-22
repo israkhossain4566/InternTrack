@@ -35,9 +35,11 @@
                     <td>{{ app.application_date }}</td>
                     <td>{{ app.deadline|default:"N/A" }}</td>
                     <td class="text-end">
+                        <div class="table-actions">
                         <a href="{% url 'application_detail' app.pk %}" class="btn btn-sm btn-outline-primary" title="View"><i class="bi bi-eye"></i></a>
                         <a href="{% url 'application_edit' app.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="bi bi-pencil"></i></a>
                         <a href="{% url 'application_delete' app.pk %}" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -46,7 +48,7 @@
     </div>
 </div>
 {% if page_obj.has_other_pages %}
-<nav aria-label="Applications pagination">
+<nav class="pagination-shell" aria-label="Applications pagination">
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
             <li class="page-item">

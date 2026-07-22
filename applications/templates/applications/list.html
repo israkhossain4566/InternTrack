@@ -8,9 +8,11 @@
             <h1 class="page-title">My Applications</h1>
             <p class="page-subtitle">Search, filter, and sort your internship opportunities.</p>
         </div>
-        <a href="{% url 'application_add' %}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i>Add Application
-        </a>
+        <div class="page-actions">
+            <a href="{% url 'application_add' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Add Application
+            </a>
+        </div>
     </div>
 
     <form method="get" action="{% url 'application_list' %}" class="toolbar-card card-body mb-4" id="application-search-form">
@@ -89,7 +91,7 @@
                     <option value="desc" {% if direction_filter == 'desc' %}selected{% endif %}>Descending</option>
                 </select>
             </div>
-            <div class="col-md-6 d-flex gap-2 toolbar-actions">
+            <div class="col-12 d-flex flex-wrap gap-2 toolbar-actions">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-funnel me-1"></i>Apply
                 </button>
