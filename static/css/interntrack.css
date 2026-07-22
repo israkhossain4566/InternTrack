@@ -68,9 +68,15 @@ h6,
     color: #fff;
 }
 
+.app-container,
 .app-main {
     max-width: 1500px;
     width: 100%;
+}
+
+.app-container {
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .app-footer {
@@ -358,6 +364,25 @@ form.card {
 .table tbody td {
     color: #334155;
     vertical-align: middle;
+}
+
+.table-actions {
+    display: inline-flex;
+    gap: 0.35rem;
+    justify-content: flex-end;
+}
+
+.table-actions .btn {
+    align-items: center;
+    display: inline-flex;
+    height: 32px;
+    justify-content: center;
+    padding: 0;
+    width: 32px;
+}
+
+.pagination-shell {
+    margin-top: 1.25rem;
 }
 
 .status-pill {
@@ -652,6 +677,21 @@ form.card {
     width: 42px;
 }
 
+.home-tip-card {
+    background:
+        linear-gradient(135deg, rgba(17, 29, 52, 0.96), rgba(36, 87, 184, 0.94) 52%, rgba(18, 130, 127, 0.92));
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.home-tip-card .card-title {
+    color: #fff;
+    font-weight: 800;
+}
+
+.home-tip-card .card-text {
+    color: rgba(255, 255, 255, 0.76);
+}
+
 .landing-panel {
     background:
         linear-gradient(135deg, #111d34 0%, #2457b8 48%, #12827f 100%);
@@ -700,6 +740,14 @@ form.card {
         width: 100%;
     }
 
+    .toolbar-actions .btn {
+        flex: 1 1 100%;
+    }
+
+    .table-actions {
+        display: flex;
+    }
+
     .form-actions {
         align-items: stretch;
         flex-direction: column-reverse;
@@ -735,4 +783,5 @@ form.card {
     .landing-panel {
         padding: 2rem;
     }
+
 }
